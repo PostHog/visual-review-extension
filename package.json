@@ -9,6 +9,8 @@
     "dev": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "preview": "node scripts/build.mjs && node preview/build.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "zip": "node scripts/build.mjs && cd dist && zip -qr ../posthog-visual-review.zip ."
   },
   "dependencies": {

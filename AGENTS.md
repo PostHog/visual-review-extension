@@ -1,0 +1,46 @@
+# Working on the visual review extension
+
+A Manifest V3 Chrome extension that shows PostHog visual review results at the top of GitHub pull requests. It's an internal tool for the PostHog team, not a supported product. The [README](README.md) covers install, how it works, and the file layout; read it first.
+
+## Commands
+
+```bash
+pnpm install
+pnpm typecheck      # tsc, strict
+pnpm test           # vitest
+pnpm build          # → dist/, load it with "Load unpacked" in chrome://extensions
+pnpm dev            # rebuild on change; reload the extension after each edit
+pnpm preview        # build the design preview → preview/out/index.html
+pnpm screenshots    # PNGs of every banner state and the popup → preview/out/screenshots/
+```
+
+CI runs typecheck, test, and build on every push. Run all three before you open a PR. There's no formatter or linter, so match the code around you: 4-space indent, single quotes, no semicolons, strict TypeScript.
+
+## Rules that aren't obvious from the code
+
+- **`src/content/index.ts` runs on every GitHub page.** Keep it tiny. It parses the URL, reads the repo index from storage, and imports the banner only for PRs in tracked repos. Don't import React, the hoggies, or anything heavy into it. Pages that aren't tracked PRs must not make network requests or wake the service worker.
+- **GitHub's DOM is only touched in `findPlacement()`** (`src/content/index.ts`). When GitHub changes its markup, that's the one place to fix.
+- **The banner lives in a shadow root and styles itself with GitHub's Primer CSS variables**, so it follows light, dark, and dimmed themes. Use Primer variables, not hardcoded colors.
+- **Account state (session, profile, repo index) is only cleared through `clearAccount()`** in `src/background/session.ts`, so the three never disagree. Don't null those storage keys anywhere else.
+- **Every surface re-reads state when `chrome.storage` changes.** Write state to storage and let the popup and tabs react. Don't message each tab directly.
+- **API calls use `credentials: 'omit'`.** Some PostHog endpoints prefer session cookies over the bearer token, so a request that sends cookies can act as the wrong user.
+- **`src/shared/runState.ts` mirrors `REVIEW_STATE_FILTERS` in the PostHog backend** (`products/visual_review/backend/logic/run_queries.py`). If you change how a run maps to a state, check the backend still agrees.
+- **Manifest permissions are user-facing.** A new permission or host permission shows up in Chrome's install prompt. Add one only when nothing else works, and say why in the PR.
+- **GitHub Actions are pinned to commit SHAs**, as the PostHog org requires. Keep the version in a trailing comment.
+
+## Tests
+
+Tests sit next to the code as `*.test.ts`. Pure logic (URL parsing, run state, the repo index) lives in `src/shared/` so it can be tested without Chrome APIs. Put new logic there when you can, and test what a change could break rather than padding coverage.
+
+## UI changes
+
+The design preview (`preview/preview.tsx`) renders every banner state and both popup states from mock data, with no extension or sign-in needed.
+
+- A new banner state or popup view gets an entry in the preview.
+- Any change a person can see needs screenshots in the PR: run `pnpm screenshots` and attach the images that changed, before and after. Check both light and dark.
+
+## Commits and PRs
+
+- Conventional commits with a scope when one fits: `feat(content): …`, `fix(auth): …`, `ci: …`, `docs: …`. Say what changed for the person using the extension.
+- Fill in the [PR template](.github/pull_request_template.md). Don't claim manual testing you didn't do; say what you couldn't check.
+- Releases are cut from version tags. See [Release](README.md#release) in the README.
