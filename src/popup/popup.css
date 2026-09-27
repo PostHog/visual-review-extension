@@ -1,0 +1,429 @@
+/*
+ * Mirrors PostHog's app tokens (frontend/src/styles/base.scss) and the LemonButton look
+ * (lib/lemon-ui/LemonButton/LemonButton.scss), restated in plain CSS since the extension
+ * can't pull in the app's stylesheets.
+ */
+
+@font-face {
+    font-family: 'RoundHog';
+    font-weight: 400;
+    font-display: swap;
+    src: url('fonts/RoundHog.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'RoundHog';
+    font-weight: 500;
+    font-display: swap;
+    src: url('fonts/RoundHog-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'RoundHog';
+    font-weight: 700;
+    font-display: swap;
+    src: url('fonts/RoundHog-SemiBold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'RoundHog';
+    font-weight: 800;
+    font-display: swap;
+    src: url('fonts/RoundHog-Bold.woff2') format('woff2');
+}
+
+:root {
+    --font-sans: 'RoundHog', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue',
+        helvetica, arial, sans-serif;
+    --bg-primary: hsl(75 14% 95%);
+    --surface-primary: #fff;
+    --surface-secondary: hsl(70 16% 93%);
+    --text-primary: hsl(0 0% 5%);
+    --text-secondary: hsl(0 0% 25%);
+    --text-tertiary: hsl(0 0% 40%);
+    --border-primary: hsl(78 13% 85%);
+    --border-secondary: hsl(69 8% 65%);
+    --accent: hsl(19 100% 48%);
+    --link: #1d4aff;
+    --danger: #db3707;
+    --danger-highlight: rgb(219 55 7 / 10%);
+    --radius: 6px;
+
+    /* LemonButton primary, the "auth scene" yellow variant */
+    --primary-face: #f7a501;
+    --primary-border: #b17816;
+    --primary-border-hover: #8e5b03;
+    --primary-frame: #b17816;
+    --primary-text: #111;
+
+    /* LemonButton secondary */
+    --secondary-face: #f3f4ef;
+    --secondary-border: hsl(78 13% 85%);
+    --secondary-border-hover: hsl(69 8% 65%);
+    --secondary-frame: #e1dddd;
+
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: hsl(240 8% 8%);
+        --surface-primary: hsl(235 8% 15%);
+        --surface-secondary: hsl(240 8% 10%);
+        --text-primary: hsl(0 0% 90%);
+        --text-secondary: hsl(0 0% 65%);
+        --text-tertiary: hsl(0 0% 60%);
+        --border-primary: hsl(230 8% 20%);
+        --border-secondary: hsl(230 8% 40%);
+        --accent: hsl(43 94% 57%);
+        --link: #f8be2a;
+        --danger: #df4b20;
+        --primary-face: hsl(43 94% 57%);
+        --primary-frame: #926826;
+        --secondary-face: #1d1f27;
+        --secondary-border: #4a4c52;
+        --secondary-border-hover: #6b6d73;
+        --secondary-frame: #323232;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    background: var(--bg-primary);
+}
+
+body {
+    width: 360px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+.popup {
+    padding: 12px 14px 14px;
+}
+
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 2px 12px;
+}
+
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+}
+.brand-logomark {
+    width: 34px;
+    height: auto;
+}
+.brand-wordmark {
+    width: 64px;
+    height: auto;
+}
+/* The hedgehog's head is drawn in #111; follow the text color so it survives dark mode. */
+.brand-logomark path[fill='#111'] {
+    fill: currentColor;
+}
+
+.product-tag {
+    padding: 1px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 999px;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px 0;
+    text-align: center;
+}
+.hero h1 {
+    margin: 4px 0 4px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+.hero p {
+    margin: 0;
+}
+
+.muted {
+    color: var(--text-secondary);
+}
+.small {
+    font-size: 12px;
+}
+.hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.grow {
+    flex: 1;
+    min-width: 0;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+}
+.card-title {
+    font-weight: 700;
+}
+
+.tab-card {
+    flex-direction: row;
+    align-items: center;
+}
+.tab-card > svg {
+    flex: none;
+}
+.tab-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 999px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-primary);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 150ms ease;
+}
+.input:hover {
+    border-color: var(--border-secondary);
+}
+.input:focus {
+    border-color: var(--border-secondary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    padding: 2px;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius);
+}
+.segmented button {
+    height: 30px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.segmented button:hover {
+    color: var(--text-primary);
+}
+.segmented button.active {
+    color: var(--text-primary);
+    background: var(--surface-primary);
+    border-color: var(--border-primary);
+    box-shadow: 0 1px 0 var(--border-primary);
+}
+
+.callout {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: var(--radius);
+}
+.callout--danger {
+    color: var(--danger);
+    background: var(--danger-highlight);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.link {
+    font-weight: 600;
+    color: var(--link);
+    text-decoration: none;
+}
+.link:hover {
+    text-decoration: underline;
+}
+
+.repo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 132px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+.repo-list a {
+    display: block;
+    padding: 4px 8px;
+    overflow: hidden;
+    font-family: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: var(--surface-secondary);
+    border-radius: 4px;
+}
+.repo-list a:hover {
+    color: var(--link);
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+}
+
+.internal-note {
+    margin: 14px 2px 0;
+    padding-top: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--text-tertiary);
+    border-top: 1px dashed var(--border-primary);
+}
+
+/*
+ * LemonButton: a face with a 3px "chrome" frame underneath that lifts on hover and
+ * presses on click. The face lives on the inner span so the transform doesn't move the hit area.
+ */
+.lemon-button {
+    --face: var(--secondary-face);
+    --border: var(--secondary-border);
+    --border-hover: var(--secondary-border-hover);
+    --frame: var(--secondary-frame);
+    position: relative;
+    display: inline-block;
+    padding: 0 0 3px;
+    font: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+.lemon-button > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 4px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-text);
+    background: var(--face);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 3px 0 -1px var(--frame);
+    transform: translateY(0);
+    transition:
+        transform 120ms ease,
+        box-shadow 120ms ease,
+        border-color 120ms ease;
+}
+.lemon-button:hover:not(:disabled) > span {
+    border-color: var(--border-hover);
+    transform: translateY(-0.5px);
+    box-shadow: 0 3.5px 0 -1px var(--frame);
+}
+.lemon-button:active:not(:disabled) > span {
+    transform: translateY(1.5px);
+    box-shadow: 0 1.5px 0 -1px var(--frame);
+}
+.lemon-button:focus-visible {
+    outline: none;
+}
+.lemon-button:focus-visible > span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.lemon-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+.lemon-button--primary {
+    --face: var(--primary-face);
+    --border: var(--primary-border);
+    --border-hover: var(--primary-border-hover);
+    --frame: var(--primary-frame);
+    width: 100%;
+}
+.lemon-button--secondary > span {
+    color: var(--text-primary);
+    min-height: 30px;
+    font-size: 13px;
+}
