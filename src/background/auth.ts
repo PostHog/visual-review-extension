@@ -14,9 +14,9 @@ import { errorDetail } from './http'
 // The metadata document caps the client at these too, so keep the two lists in sync.
 const SCOPES = ['visual_review:read', 'user:read', 'project:read', 'organization:read']
 
-// Lives in PostHog/posthog.com at static/oauth/visual-review/client-metadata.json. It
+// Lives in PostHog/posthog.com at static/.well-known/oauth/visual-review/client-metadata.json. It
 // registers https://<extension id>.chromiumapp.org/, which the manifest's `key` pins.
-const CLIENT_ID = 'https://posthog.com/oauth/visual-review/client-metadata.json'
+const CLIENT_ID = 'https://posthog.com/.well-known/oauth/visual-review/client-metadata.json'
 
 export interface Session {
     authHost: string
