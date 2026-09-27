@@ -1,0 +1,28 @@
+{
+  "name": "posthog-visual-review-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shows PostHog visual review results at the top of GitHub pull requests.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "zip": "node scripts/build.mjs && cd dist && zip -qr ../posthog-visual-review.zip ."
+  },
+  "dependencies": {
+    "@posthog/brand": "^0.12.3",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
