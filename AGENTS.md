@@ -25,6 +25,8 @@ CI runs typecheck, test, and build on every push. Run all three before you open 
 - **Every surface re-reads state when `chrome.storage` changes.** Write state to storage and let the popup and tabs react. Don't message each tab directly.
 - **API calls use `credentials: 'omit'`.** Some PostHog endpoints prefer session cookies over the bearer token, so a request that sends cookies can act as the wrong user.
 - **`src/shared/runState.ts` mirrors `REVIEW_STATE_FILTERS` in the PostHog backend** (`products/visual_review/backend/logic/run_queries.py`). If you change how a run maps to a state, check the backend still agrees.
+- **The manifest `key` pins the extension ID**, and with it the OAuth redirect `https://coegljbgaffjilmoampifafjigkdmjaf.chromiumapp.org/` that the client metadata document registers (PostHog/posthog.com, `static/.well-known/oauth/visual-review/client-metadata.json`). Changing the key breaks sign-in until the document changes too. The private key is in 1Password as **Visual Review extension signing key**; never commit it.
+- **OAuth scopes are listed twice**: in `src/background/auth.ts` and in the client metadata document, which caps them. A new scope goes in both, or sign-in fails with `invalid_scope`.
 - **Manifest permissions are user-facing.** A new permission or host permission shows up in Chrome's install prompt. Add one only when nothing else works, and say why in the PR.
 - **GitHub Actions are pinned to commit SHAs**, as the PostHog org requires. Keep the version in a trailing comment.
 
