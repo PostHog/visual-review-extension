@@ -59,8 +59,11 @@ To use a local PostHog, open the popup, choose **Self-hosted / local**, and ente
 **Design preview.** Every banner state and the popup render with mock data, no extension or sign-in needed:
 
 ```bash
-pnpm build && node preview/build.mjs && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut
+pnpm preview && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut
+pnpm screenshots                                          # PNGs of all of them → preview/out/screenshots/ (needs Chrome)
 ```
+
+See [AGENTS.md](AGENTS.md) for how to work in this repo.
 
 **Icons** come from the brand logomark: run `node scripts/icons.mjs` (needs `rsvg-convert`).
 
