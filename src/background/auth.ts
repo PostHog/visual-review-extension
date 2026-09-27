@@ -2,19 +2,21 @@
 //
 // PostHog Cloud goes through oauth.posthog.com, which picks the user's region (US or EU)
 // and hands back `posthog_base_url` with the token. Self-hosted / local instances are
-// talked to directly. Either way the client is registered on the fly with RFC 7591
-// dynamic client registration as a public client (no secret), so nothing has to be
-// pre-provisioned in PostHog.
+// talked to directly. Either way the client_id is the URL of our client ID metadata
+// document (CIMD) on posthog.com, which every PostHog instance fetches for itself, so
+// nothing has to be registered or pre-provisioned.
 
 import { errorMessage } from '../shared/errors'
-import { storageItem } from '../shared/storage'
 import { errorDetail } from './http'
 
 // visual_review:read — runs, repos. user:read — /api/users/@me/.
 // project:read + organization:read — list the projects the token can see.
+// The metadata document caps the client at these too, so keep the two lists in sync.
 const SCOPES = ['visual_review:read', 'user:read', 'project:read', 'organization:read']
 
-const CLIENT_NAME = 'PostHog Visual Review for GitHub (internal)'
+// Lives in PostHog/posthog.com at static/.well-known/oauth/visual-review/client-metadata.json. It
+// registers https://<extension id>.chromiumapp.org/, which the manifest's `key` pins.
+const CLIENT_ID = 'https://posthog.com/.well-known/oauth/visual-review/client-metadata.json'
 
 export interface Session {
     authHost: string
@@ -68,38 +70,6 @@ async function postForm(url: string, body: Record<string, string>): Promise<Resp
     })
 }
 
-/** Client registrations are cached per (auth host, redirect URI) so we only register once per install. */
-function clientIdItem(authHost: string, redirectUri: string) {
-    return storageItem<string>(`client:${authHost}:${redirectUri}`)
-}
-
-async function getClientId(authHost: string, redirectUri: string): Promise<string> {
-    const item = clientIdItem(authHost, redirectUri)
-    const cached = await item.get()
-    if (cached) {
-        return cached
-    }
-    const response = await fetch(`${authHost}/oauth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        credentials: 'omit',
-        body: JSON.stringify({
-            client_name: CLIENT_NAME,
-            redirect_uris: [redirectUri],
-            grant_types: ['authorization_code', 'refresh_token'],
-            response_types: ['code'],
-            token_endpoint_auth_method: 'none',
-            scope: SCOPES.join(' '),
-        }),
-    })
-    if (!response.ok) {
-        throw new SignInError(`Couldn't register with ${authHost}: ${(await errorDetail(response)).message}`)
-    }
-    const { client_id } = (await response.json()) as { client_id: string }
-    await item.set(client_id)
-    return client_id
-}
-
 function toSession(authHost: string, clientId: string, token: TokenResponse, previous?: Session): Session {
     return {
         authHost,
@@ -107,7 +77,7 @@ function toSession(authHost: string, clientId: string, token: TokenResponse, pre
         apiHost: token.posthog_base_url ? new URL(token.posthog_base_url).origin : (previous?.apiHost ?? authHost),
         clientId,
         accessToken: token.access_token,
-        // DCR clients get non-rotating refresh tokens, so keep the old one if none comes back.
+        // CIMD clients get non-rotating refresh tokens, so keep the old one if none comes back.
         refreshToken: token.refresh_token ?? previous?.refreshToken ?? null,
         expiresAt: Date.now() + token.expires_in * 1000,
         scopedTeams: token.scoped_teams ?? previous?.scopedTeams ?? [],
@@ -117,20 +87,11 @@ function toSession(authHost: string, clientId: string, token: TokenResponse, pre
 
 export async function signIn(authHost: string): Promise<Session> {
     const redirectUri = chrome.identity.getRedirectURL()
-    const clientId = await getClientId(authHost, redirectUri)
-    // A registration can disappear server-side (e.g. a local DB reset); forget it so the next attempt re-registers.
-    const failWith = async (code: string | undefined | null, message: string): Promise<never> => {
-        if (code === 'invalid_client') {
-            await clientIdItem(authHost, redirectUri).set(null)
-        }
-        throw new SignInError(message)
-    }
-
     const verifier = randomString(48)
     const state = randomString(16)
     const params = new URLSearchParams({
         response_type: 'code',
-        client_id: clientId,
+        client_id: CLIENT_ID,
         redirect_uri: redirectUri,
         scope: SCOPES.join(' '),
         state,
@@ -151,7 +112,7 @@ export async function signIn(authHost: string): Promise<Session> {
     const result = new URL(redirect).searchParams
     const error = result.get('error')
     if (error) {
-        return failWith(error, result.get('error_description') || error)
+        throw new SignInError(result.get('error_description') || error)
     }
     if (result.get('state') !== state) {
         throw new SignInError('Sign-in response did not match the request (state mismatch)')
@@ -164,15 +125,14 @@ export async function signIn(authHost: string): Promise<Session> {
     const response = await postForm(`${authHost}/oauth/token`, {
         grant_type: 'authorization_code',
         code,
-        client_id: clientId,
+        client_id: CLIENT_ID,
         redirect_uri: redirectUri,
         code_verifier: verifier,
     })
     if (!response.ok) {
-        const detail = await errorDetail(response)
-        return failWith(detail.code, `Token exchange failed: ${detail.message}`)
+        throw new SignInError(`Token exchange failed: ${(await errorDetail(response)).message}`)
     }
-    return toSession(authHost, clientId, (await response.json()) as TokenResponse)
+    return toSession(authHost, CLIENT_ID, (await response.json()) as TokenResponse)
 }
 
 export async function refresh(session: Session): Promise<Session> {

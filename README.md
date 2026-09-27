@@ -19,7 +19,7 @@ A Chrome extension that shows [visual review](https://github.com/PostHog/posthog
 4. Click **Load unpacked** and pick the unzipped folder.
 5. Pin the extension, click its icon, and choose **Sign in with PostHog**.
 
-**To update:** download the new zip, unzip it over the same folder, and click the reload icon on the extension's card in `chrome://extensions`. Keep the same folder: the extension ID comes from its path, and your sign-in is tied to that ID.
+**To update:** download the new zip, unzip it over the same folder, and click the reload icon on the extension's card in `chrome://extensions`. Reloading keeps your sign-in. Removing the extension clears it.
 
 ## How it works
 
@@ -32,8 +32,10 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
 - **Auth.** OAuth 2.0 authorization code + PKCE, run with `chrome.identity.launchWebAuthFlow`.
   - PostHog Cloud goes through `oauth.posthog.com`, which works out whether the user is on US or EU and returns `posthog_base_url` with the token.
   - Self-hosted and local instances are called directly.
-  - The extension registers itself as a public client with dynamic client registration (`POST /oauth/register`), so **nothing needs to be set up in PostHog first**.
-  - Scopes: `visual_review:read user:read project:read organization:read`.
+  - The `client_id` is the URL of a [client ID metadata document](https://posthog.com/.well-known/oauth/visual-review/client-metadata.json) (CIMD) that lives in [PostHog/posthog.com](https://github.com/PostHog/posthog.com) at `static/.well-known/oauth/visual-review/client-metadata.json`. Each PostHog instance fetches it, so **nothing needs to be set up in PostHog first**, and it's the same client on US, EU, and self-hosted. A self-hosted instance needs outbound HTTPS to posthog.com.
+  - The document registers one redirect, `https://coegljbgaffjilmoampifafjigkdmjaf.chromiumapp.org/`. The `key` in `src/manifest.json` pins that extension ID wherever the folder lives, so don't change the key without updating the document.
+  - `key` is the public half. The private half is in 1Password as **Visual Review extension signing key**. Loading unpacked never needs it; it's only for signing a `.crx` or a first Chrome Web Store upload that keeps the same ID. Never commit it.
+  - Scopes: `visual_review:read user:read project:read organization:read`. The document caps the client at the same list, so a new scope goes in both.
 - **Repo index.** The worker lists visual review repos in every project the token can reach and saves `owner/repo` → project + repo id to `chrome.storage.local`.
   - It is rebuilt on sign-in, when the default project changes, and from the popup's Refresh button.
   - A visit to an unknown repo rebuilds it at most hourly, so newly enabled repos show up. After a failure it backs off for 5 minutes.
@@ -83,7 +85,7 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 
 | Path                              | What                                                                     |
 | --------------------------------- | ------------------------------------------------------------------------ |
-| `src/background/auth.ts`          | DCR, PKCE, token exchange, refresh, revoke                               |
+| `src/background/auth.ts`          | PKCE, token exchange, refresh, revoke                                    |
 | `src/background/session.ts`       | Account state (the only place it's cleared) and the authenticated `api()` |
 | `src/background/repoIndex.ts`     | Builds the tracked-repo index across projects                            |
 | `src/background/visualReview.ts`  | Runs for a PR in a tracked repo                                          |
@@ -96,6 +98,5 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 ## Known limitations
 
 - **GitHub DOM.** The banner mounts inside GitHub's React PR header, found via `nav[aria-label="Pull request navigation"]`, with fallbacks for the classic layout. If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` is the only place to fix.
-- **Per-install OAuth client.** Each install registers its own OAuth client, because unpacked extensions get an ID from their folder path. A first-party CIMD document in PostHog (like `posthog/api/oauth/raycast_metadata.py`) plus a pinned `key` in the manifest would give one stable client and skip the consent screen.
 - **Reading only.** The banner doesn't approve or tolerate snapshots.
 - **Chrome only.**
