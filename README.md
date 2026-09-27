@@ -97,6 +97,5 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 ## Known limitations
 
 - **GitHub DOM.** The banner mounts inside GitHub's React PR header, found via `nav[aria-label="Pull request navigation"]`, with fallbacks for the classic layout. If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` is the only place to fix.
-- **Consent screen.** PostHog shows a consent screen, with an "unverified application" warning, until staff mark the client verified or first-party in Django admin. That has to be done once per region.
 - **Reading only.** The banner doesn't approve or tolerate snapshots.
 - **Chrome only.**
