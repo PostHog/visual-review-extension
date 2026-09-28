@@ -31,7 +31,7 @@ function headline(runs: RunView[], state: RunState): string {
             return 'Comparing snapshots…'
         case 'approved': {
             const who = runs.map((r) => approverName(r.run)).find(Boolean)
-            return who ? `Approved by ${who}` : 'Changes approved'
+            return who ? `Snapshots approved by ${who}` : 'Snapshots approved'
         }
         case 'observe':
             return 'Visual changes recorded'
@@ -86,8 +86,8 @@ function Section({
     return (
         <section className={`section tone-${tone}`} aria-label="PostHog visual review">
             <h3 className="heading">
+                <span>Visual review</span>
                 <Logo.Logomark className="logomark" aria-hidden="true" />
-                Visual review
             </h3>
             <div className="summary">
                 <div className="hoggie">

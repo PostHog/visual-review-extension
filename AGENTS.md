@@ -39,10 +39,9 @@ Tests sit next to the code as `*.test.ts`. Pure logic (URL parsing, run state, t
 The design preview (`preview/preview.tsx`) renders every sidebar state and both popup states from mock data, with no extension or sign-in needed.
 
 - A new sidebar state or popup view gets an entry in the preview.
-- Any change a person can see needs screenshots in the PR: run `pnpm screenshots` and attach the images that changed, before and after. Check both light and dark.
 
 ## Commits and PRs
 
 - Conventional commits with a scope when one fits: `feat(content): …`, `fix(auth): …`, `ci: …`, `docs: …`. Say what changed for the person using the extension.
-- Fill in the [PR template](.github/pull_request_template.md). Don't claim manual testing you didn't do; say what you couldn't check.
+- You must follow the [PR template](.github/pull_request_template.md) when opening a PR.
 - Releases are cut from version tags. See [Release](README.md#release) in the README.

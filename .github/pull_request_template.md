@@ -9,10 +9,16 @@
 ## Screenshots
 
 <!--
-Required for anything a person can see: the sidebar section, the popup, sign-in, or the extension's name and icon.
-Run `pnpm screenshots` and attach the images from preview/out/screenshots/ that changed, before and after.
-Check both light and dark. If the change can't be shown in the preview (e.g. placement on a real GitHub page),
-add a screenshot of the real page instead.
+Attach screenshots right here in the description. They're required for anything a person can see: the sidebar
+section, the popup, sign-in, or the extension's name and icon. A visible change without them isn't ready to merge.
+
+1. Run `pnpm screenshots` on this branch and on main. The images land in preview/out/screenshots/.
+2. Attach the ones that changed, before and after, in light and dark: drag the PNGs into this editor, or run
+   `gh pr-assets image --yes <files>` and paste the markdown it prints. Both upload publicly, so only attach
+   the preview's mock data, never real customer data.
+3. If the change can't be shown in the preview (e.g. placement on a real GitHub page), add a screenshot of the
+   real page instead.
+
 Write "None" for changes nobody can see.
 -->
 
