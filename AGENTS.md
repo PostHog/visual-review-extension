@@ -1,6 +1,6 @@
 # Working on the visual review extension
 
-A Manifest V3 Chrome extension that shows PostHog visual review results at the top of GitHub pull requests. It's an internal tool for the PostHog team, not a supported product. The [README](README.md) covers install, how it works, and the file layout; read it first.
+A Manifest V3 Chrome extension that shows PostHog visual review results in the sidebar of GitHub pull requests. It's an internal tool for the PostHog team, not a supported product. The [README](README.md) covers install, how it works, and the file layout; read it first.
 
 ## Commands
 
@@ -11,16 +11,16 @@ pnpm test           # vitest
 pnpm build          # → dist/, load it with "Load unpacked" in chrome://extensions
 pnpm dev            # rebuild on change; reload the extension after each edit
 pnpm preview        # build the design preview → preview/out/index.html
-pnpm screenshots    # PNGs of every banner state and the popup → preview/out/screenshots/
+pnpm screenshots    # PNGs of every sidebar state and the popup → preview/out/screenshots/
 ```
 
 CI runs typecheck, test, and build on every push. Run all three before you open a PR. There's no formatter or linter, so match the code around you: 4-space indent, single quotes, no semicolons, strict TypeScript.
 
 ## Rules that aren't obvious from the code
 
-- **`src/content/index.ts` runs on every GitHub page.** Keep it tiny. It parses the URL, reads the repo index from storage, and imports the banner only for PRs in tracked repos. Don't import React, the hoggies, or anything heavy into it. Pages that aren't tracked PRs must not make network requests or wake the service worker.
+- **`src/content/index.ts` runs on every GitHub page.** Keep it tiny. It parses the URL, reads the repo index from storage, and imports the sidebar module only for PRs in tracked repos. Don't import React, the hoggies, or anything heavy into it. Pages that aren't tracked PRs must not make network requests or wake the service worker.
 - **GitHub's DOM is only touched in `findPlacement()`** (`src/content/index.ts`). When GitHub changes its markup, that's the one place to fix.
-- **The banner lives in a shadow root and styles itself with GitHub's Primer CSS variables**, so it follows light, dark, and dimmed themes. Use Primer variables, not hardcoded colors.
+- **The sidebar section lives in a shadow root and styles itself with GitHub's Primer CSS variables**, so it follows light, dark, and dimmed themes. Use Primer variables, not hardcoded colors. Its host element carries GitHub's own `discussion-sidebar-item` class for spacing and dividers, and is `hidden` when there's nothing to show.
 - **Account state (session, profile, repo index) is only cleared through `clearAccount()`** in `src/background/session.ts`, so the three never disagree. Don't null those storage keys anywhere else.
 - **Every surface re-reads state when `chrome.storage` changes.** Write state to storage and let the popup and tabs react. Don't message each tab directly.
 - **API calls use `credentials: 'omit'`.** Some PostHog endpoints prefer session cookies over the bearer token, so a request that sends cookies can act as the wrong user.
@@ -36,13 +36,12 @@ Tests sit next to the code as `*.test.ts`. Pure logic (URL parsing, run state, t
 
 ## UI changes
 
-The design preview (`preview/preview.tsx`) renders every banner state and both popup states from mock data, with no extension or sign-in needed.
+The design preview (`preview/preview.tsx`) renders every sidebar state and both popup states from mock data, with no extension or sign-in needed.
 
-- A new banner state or popup view gets an entry in the preview.
-- Any change a person can see needs screenshots in the PR: run `pnpm screenshots` and attach the images that changed, before and after. Check both light and dark.
+- A new sidebar state or popup view gets an entry in the preview.
 
 ## Commits and PRs
 
 - Conventional commits with a scope when one fits: `feat(content): …`, `fix(auth): …`, `ci: …`, `docs: …`. Say what changed for the person using the extension.
-- Fill in the [PR template](.github/pull_request_template.md). Don't claim manual testing you didn't do; say what you couldn't check.
+- You must follow the [PR template](.github/pull_request_template.md) when opening a PR.
 - Releases are cut from version tags. See [Release](README.md#release) in the README.

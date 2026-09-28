@@ -1,10 +1,10 @@
 import { createRoot, type Root } from 'react-dom/client'
 
-import styles from './banner.css'
+import styles from './sidebar.css'
 
 /**
  * A React root inside `host`'s shadow root. Shadow DOM keeps GitHub's CSS out, while Primer's
- * CSS custom properties (colors, fonts) still inherit through it, so the banner follows the
+ * CSS custom properties (colors, fonts) still inherit through it, so the section follows the
  * user's GitHub theme.
  */
 export function createShadowRoot(host: HTMLElement): Root {

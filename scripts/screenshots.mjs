@@ -1,4 +1,4 @@
-// Screenshots of every banner state (light + dark) and both popup states, rendered from the
+// Screenshots of every sidebar state (light + dark) and both popup states, rendered from the
 // design preview's mock data with headless Chrome. For PR descriptions: `pnpm screenshots`.
 // Set CHROME_PATH if Chrome isn't in the default location for your platform.
 import { execFileSync } from 'node:child_process'
@@ -21,8 +21,8 @@ await mkdir(outdir, { recursive: true })
 
 const page = pathToFileURL(resolve('preview/out/index.html')).href
 const shots = [
-    { name: 'banner-light', query: 'theme=light', size: '1060,1860' },
-    { name: 'banner-dark', query: 'theme=dark', size: '1060,1860' },
+    { name: 'sidebar-light', query: 'theme=light', size: '980,1060' },
+    { name: 'sidebar-dark', query: 'theme=dark', size: '980,1060' },
     { name: 'popup-signed-in', query: 'popup=signedIn', size: '360,640' },
     { name: 'popup-signed-out', query: 'popup=signedOut', size: '360,520' },
 ]

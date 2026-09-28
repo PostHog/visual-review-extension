@@ -1,46 +1,40 @@
 // Runs on every github.com page, so it stays tiny: parse the URL, check the repo index in
-// storage, and only load the banner module (React + hoggies) for a PR in a tracked repo.
+// storage, and only load the sidebar module (React + hoggies) for a PR in a tracked repo.
 
 import { parsePullRequestUrl } from '../shared/github'
 import { send } from '../shared/messages'
 import { lookupRepo, needsRefresh, repoIndexItem } from '../shared/repoIndex'
 import { onStorageChange } from '../shared/storage'
-import type { BannerHandle } from './mount'
+import type { SidebarHandle } from './mount'
 
 const HOST_ID = 'posthog-visual-review'
 
 /**
- * Where the banner goes, most specific first. GitHub ships hashed CSS-module class names,
- * so we match on stable prefixes and ARIA labels rather than full class names.
+ * Where the section goes: right after "Labels" in the PR's sidebar, like any other sidebar
+ * section. Pages without the sidebar (Files changed, Commits, Checks) show nothing.
  */
 function findPlacement(): { el: Element; position: InsertPosition } | null {
-    const nav = document.querySelector('nav[aria-label="Pull request navigation"]')
-    if (nav) {
-        // React PR experience: the header block that holds the title and the tabs.
-        const headerContent = nav.closest('[class*="PageLayout-HeaderContent"]')
-        if (headerContent) {
-            return { el: headerContent, position: 'beforeend' }
-        }
-        const pageHeader = nav.closest('[class*="PageHeader-PageHeader"]')
-        if (pageHeader) {
-            return { el: pageHeader, position: 'afterend' }
-        }
+    const sidebar = document.querySelector('#partial-discussion-sidebar')
+    if (!sidebar) {
+        return null
     }
-    // Classic (Rails-rendered) PR page.
-    const classicHeader = document.querySelector('#partial-discussion-header')
-    if (classicHeader) {
-        return { el: classicHeader, position: 'afterend' }
+    // GitHub re-renders the Labels section in place when labels change, keyed on this channel.
+    const labels =
+        sidebar.querySelector('[data-channel-event-name="labels_updated"]') ??
+        sidebar.querySelector('.js-issue-labels')?.closest('.discussion-sidebar-item')
+    if (labels) {
+        return { el: labels, position: 'afterend' }
     }
-    const tabnav = document.querySelector('.tabnav.pull-request-tab-nav, .js-pull-request-tab-nav')
-    return tabnav ? { el: tabnav, position: 'afterend' } : null
+    const first = sidebar.querySelector('.discussion-sidebar-item')
+    return first ? { el: first, position: 'afterend' } : { el: sidebar, position: 'afterbegin' }
 }
 
 let host: HTMLElement | null = null
-let banner: BannerHandle | null = null
+let sidebar: SidebarHandle | null = null
 let lastHref = ''
 let syncId = 0
 
-/** Put the host in place, or back in place if GitHub re-rendered the header and dropped it. */
+/** Put the host in place, or back in place if GitHub re-rendered the sidebar and dropped it. */
 function attach(): void {
     if (host && !host.isConnected) {
         const placement = findPlacement()
@@ -49,9 +43,9 @@ function attach(): void {
 }
 
 function unmount(): void {
-    banner?.unmount()
+    sidebar?.unmount()
     host?.remove()
-    banner = null
+    sidebar = null
     host = null
 }
 
@@ -75,16 +69,20 @@ async function sync(): Promise<void> {
         return
     }
 
-    const { mountBanner } = (await import(chrome.runtime.getURL('banner.js'))) as typeof import('./mount')
+    const { mountSidebar } = (await import(chrome.runtime.getURL('sidebar.js'))) as typeof import('./mount')
     if (id !== syncId) {
         return
     }
-    if (banner) {
-        banner.update(pr, entry)
+    if (sidebar) {
+        sidebar.update(pr, entry)
     } else {
         host = document.createElement('div')
         host.id = HOST_ID
-        banner = mountBanner(host, pr, entry)
+        // GitHub's own class, so the section gets the same spacing and divider as its neighbors.
+        // Hidden until there's something to show.
+        host.className = 'discussion-sidebar-item'
+        host.hidden = true
+        sidebar = mountSidebar(host, pr, entry)
     }
     attach()
 }
@@ -100,7 +98,7 @@ function schedule(): void {
     }
 }
 
-// GitHub navigates with Turbo and React Router and re-renders the header freely. The observer
+// GitHub navigates with Turbo and React Router and re-renders the sidebar freely. The observer
 // is the catch-all for both, so its per-mutation work is a string compare and a flag check.
 new MutationObserver(() => {
     if (location.href !== lastHref) {

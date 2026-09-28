@@ -1,16 +1,20 @@
 /*
  * Styled with GitHub's own Primer CSS variables (they inherit through the shadow root),
- * so the banner matches light, dark, dimmed, and high-contrast themes automatically.
- * Fallbacks are Primer's light-theme values.
+ * so the section matches light, dark, dimmed, and high-contrast themes automatically.
+ * Fallbacks are Primer's light-theme values. The host element carries GitHub's own
+ * `discussion-sidebar-item` class, which supplies the spacing and divider between sections.
  */
 
 :host {
     all: initial;
     display: block;
     font-family: var(--fontStack-sansSerif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif);
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.5;
     color: var(--fgColor-default, #1f2328);
+}
+:host([hidden]) {
+    display: none;
 }
 
 *,
@@ -19,26 +23,10 @@
     box-sizing: border-box;
 }
 
-.box {
+.section {
     --tone-fg: var(--fgColor-muted, #59636e);
     --tone-bg: var(--bgColor-muted, #f6f8fa);
     --tone-border: var(--borderColor-default, #d1d9e0);
-    position: relative;
-    overflow: hidden;
-    /* On the box, not :host, so a PR with nothing to show leaves no gap. */
-    margin: 16px 0 8px;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 6px);
-    background: var(--bgColor-default, #ffffff);
-}
-
-/* A thin accent stripe on the left edge carries the state, like GitHub's merge box. */
-.box::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--tone-fg);
 }
 
 .tone-success {
@@ -56,44 +44,21 @@
     --tone-bg: var(--bgColor-danger-muted, #ffebe9);
     --tone-border: var(--borderColor-danger-muted, rgba(255, 129, 130, 0.4));
 }
-.tone-neutral {
-    --tone-fg: var(--fgColor-muted, #59636e);
-}
 
-.box-header {
+/* Matches GitHub's .discussion-sidebar-heading ("Reviewers", "Labels", …). */
+.heading {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px 12px 14px;
-}
-
-.hoggie {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-}
-.hoggie svg {
-    display: block;
-}
-
-.header-text {
-    flex: 1;
-    min-width: 0;
-}
-
-.eyebrow {
-    display: flex;
-    align-items: center;
+    justify-content: space-between;
     gap: 6px;
+    margin: 0 0 8px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--fgColor-muted, #59636e);
 }
 
 .logomark {
-    width: 20px;
+    width: 16px;
     height: auto;
     flex: none;
     color: var(--fgColor-default, #1f2328);
@@ -103,30 +68,51 @@
     fill: currentColor;
 }
 
+.summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hoggie {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+}
+.hoggie svg {
+    display: block;
+}
+
+.summary-text {
+    flex: 1;
+    min-width: 0;
+}
+
 .title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
-    line-height: 1.4;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
     color: var(--fgColor-default, #1f2328);
 }
 
 .subtitle {
-    font-size: 12px;
-    color: var(--fgColor-muted, #59636e);
-}
-
-.header-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    flex: none;
+    gap: 2px 6px;
+    margin-top: 2px;
+    color: var(--fgColor-muted, #59636e);
+    overflow-wrap: anywhere;
 }
 
 /* Primer Label */
 .label {
     display: inline-flex;
     align-items: center;
-    padding: 0 7px;
+    padding: 0 6px;
     font-size: 12px;
     font-weight: 500;
     line-height: 18px;
@@ -137,15 +123,60 @@
     background: var(--tone-bg);
 }
 
-/* Primer Button */
-.btn {
-    display: inline-flex;
+.runs {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.run-row {
+    display: flex;
     align-items: center;
     gap: 6px;
-    height: 32px;
+    min-height: 24px;
+}
+
+.run-link {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+.run-link:hover .run-type {
+    color: var(--fgColor-accent, #0969da);
+    text-decoration: underline;
+}
+
+.run-type {
+    flex: none;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    white-space: nowrap;
+}
+
+.run-detail {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--fgColor-muted, #59636e);
+}
+
+/* Primer Button, small, full width. */
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 28px;
+    margin-top: 8px;
     padding: 0 12px;
     font: inherit;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 20px;
     white-space: nowrap;
@@ -164,10 +195,10 @@
     border-color: var(--button-default-borderColor-hover, var(--borderColor-default, #d1d9e0));
 }
 .btn:focus-visible,
-.icon-button:focus-visible,
-.link:focus-visible {
+.run-link:focus-visible {
     outline: 2px solid var(--focus-outlineColor, #0969da);
-    outline-offset: -2px;
+    outline-offset: 1px;
+    border-radius: 4px;
 }
 .btn-primary {
     color: var(--button-primary-fgColor-rest, #ffffff);
@@ -182,85 +213,6 @@
 .btn-trailing {
     color: inherit;
     opacity: 0.8;
-}
-
-.icon-button {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    color: var(--fgColor-muted, #59636e);
-    background: transparent;
-    border: 0;
-    border-radius: var(--borderRadius-medium, 6px);
-    cursor: pointer;
-}
-.icon-button:hover {
-    background: var(--button-invisible-bgColor-hover, rgba(208, 215, 222, 0.32));
-}
-.icon-button svg {
-    transition: transform 150ms ease;
-}
-.icon-button.is-collapsed svg {
-    transform: rotate(-90deg);
-}
-
-.box-body {
-    border-top: 1px solid var(--borderColor-muted, #d1d9e0b3);
-}
-
-.run-row + .run-row {
-    border-top: 1px solid var(--borderColor-muted, #d1d9e0b3);
-}
-
-.run-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 40px;
-    padding: 8px 16px;
-}
-
-.run-type {
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.run-detail {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--fgColor-muted, #59636e);
-}
-
-.run-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex: none;
-    font-size: 12px;
-    color: var(--fgColor-muted, #59636e);
-}
-.run-meta code {
-    font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace);
-    font-size: 12px;
-    padding: 1px 4px;
-    border-radius: 4px;
-    background: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-}
-
-.link {
-    flex: none;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--fgColor-accent, #0969da);
-    text-decoration: none;
-}
-.link:hover {
-    text-decoration: underline;
 }
 
 .octicon {
@@ -290,17 +242,5 @@
 @media (prefers-reduced-motion: reduce) {
     .spin {
         animation: none;
-    }
-}
-
-@media (max-width: 767px) {
-    .hoggie {
-        display: none;
-    }
-    .box-header {
-        flex-wrap: wrap;
-    }
-    .run-meta {
-        display: none;
     }
 }
