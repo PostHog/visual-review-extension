@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "PostHog Visual Review for GitHub",
     "short_name": "Visual Review",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Internal PostHog tool: shows visual review results at the top of GitHub pull requests.",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuvFepkL5n1I2HJ2pCFxUQuVrKC3rUAS9lsv/ccI+P72Q3+iMqKBSEaqnU33HpAuUxVSKcsjCWsvR9P19eKFPgty9wZXLnJlv+KlGZtjrFQVJvGuc74/720kT6+oPGEe1p9jyvZGxZFg+Yi27nH+y/aIr3hVwfQAWwBxqt4UrLJM1XGEjSGeOSKqb7VL+Ichx8kX7QcjQ0d1bBGiZF7TIvE84lxwxmsGCaEh/TByFZUtkwjBHHePXdWgVVmjUNWNNV5ejLpquOFhASDKWaOZlsN0qUa5ptIgdJ5rtWkxV48MJZcXnK2nAZJmjOoGuuPdtam1KkG9VXyAU3EAQwv+KUwIDAQAB",
     "icons": {
