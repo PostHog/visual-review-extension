@@ -2,13 +2,13 @@
 
 > **Internal tool for the PostHog team.** It isn't a supported PostHog product. The code is public, but it's built around how we use visual review ourselves.
 
-A Chrome extension that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results at the top of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
+A Chrome extension that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results in the sidebar of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
 
-- **On GitHub:** a banner under the PR header. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes. It shows:
+- **On GitHub:** a "Visual review" section in the PR's sidebar, right after Labels. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes. It shows:
   - the overall state (needs review, approved, no changes, in progress, failed)
   - one row per run type (storybook, playwright, …), each linking to its run in PostHog
   
-  It only shows up when there's something to report.
+  It only shows up when there's something to report, and only on the Conversation tab, where GitHub shows the sidebar.
 - **Popup (toolbar icon):** the only place to sign in. It also shows the current tab's status, the repos being watched, and a default project picker, styled like the PostHog app (RoundHog, LemonButton, hoggies from `@posthog/brand`).
 
 ## Install
@@ -26,7 +26,7 @@ A Chrome extension that shows [visual review](https://github.com/PostHog/posthog
 ```
 GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──▶ not a tracked PR: nothing, no request
                     │
-                    └── tracked PR ──▶ banner.js ──▶ service worker ──(OAuth bearer)──▶ PostHog API
+                    └── tracked PR ──▶ sidebar.js ─▶ service worker ──(OAuth bearer)──▶ PostHog API
 ```
 
 - **Auth.** OAuth 2.0 authorization code + PKCE, run with `chrome.identity.launchWebAuthFlow`.
@@ -40,8 +40,8 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
   - It is rebuilt on sign-in, when the default project changes, and from the popup's Refresh button.
   - A visit to an unknown repo rebuilds it at most hourly, so newly enabled repos show up. After a failure it backs off for 5 minutes.
   - The default project wins when a repo is set up in more than one project.
-- **Loader + banner.** `content.js` runs on every GitHub page but only parses the URL and reads the index. For a PR in a tracked repo it imports `banner.js` (React and the hoggies). Everything else costs no network request and never wakes the worker.
-- **Runs.** The newest non-superseded run is kept for each run type. While a run is processing, the banner refreshes every 15s; a tracked PR with no runs yet is checked every minute. It also refreshes when you come back to the tab.
+- **Loader + sidebar.** `content.js` runs on every GitHub page but only parses the URL and reads the index. For a PR in a tracked repo it imports `sidebar.js` (React and the hoggies). Everything else costs no network request and never wakes the worker.
+- **Runs.** The newest non-superseded run is kept for each run type. While a run is processing, the section refreshes every 15s; a tracked PR with no runs yet is checked every minute. It also refreshes when you come back to the tab.
 - **Account state.** `background/session.ts` is the only place that clears the session, profile, and index. Every surface re-reads state when `chrome.storage` changes, so signing in or out updates open tabs straight away.
 
 ## Develop
@@ -58,7 +58,7 @@ Load `dist/` with **Load unpacked**, as in [Install](#install).
 
 To use a local PostHog, open the popup, choose **Self-hosted / local**, and enter something like `http://localhost:8010`. Chrome asks for permission to reach that host.
 
-**Design preview.** Every banner state and the popup render with mock data, no extension or sign-in needed:
+**Design preview.** Every sidebar state and the popup render with mock data, no extension or sign-in needed:
 
 ```bash
 pnpm preview && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut
@@ -89,14 +89,15 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 | `src/background/session.ts`       | Account state (the only place it's cleared) and the authenticated `api()` |
 | `src/background/repoIndex.ts`     | Builds the tracked-repo index across projects                            |
 | `src/background/visualReview.ts`  | Runs for a PR in a tracked repo                                          |
-| `src/content/index.ts`            | Loader: URL + index check, placement in GitHub's PR header               |
-| `src/content/mount.tsx`, `App.tsx`, `Banner.tsx` | The banner, rendered in a shadow root                     |
+| `src/content/index.ts`            | Loader: URL + index check, placement in GitHub's PR sidebar              |
+| `src/content/mount.tsx`, `App.tsx`, `Sidebar.tsx` | The sidebar section, rendered in a shadow root           |
 | `src/popup/`                      | Popup UI                                                                 |
 | `src/shared/runState.ts`          | Run → state rules, mirroring `REVIEW_STATE_FILTERS` in the backend       |
 | `src/shared/runCopy.ts`           | Label, tone, and hoggie for each state                                   |
 
 ## Known limitations
 
-- **GitHub DOM.** The banner mounts inside GitHub's React PR header, found via `nav[aria-label="Pull request navigation"]`, with fallbacks for the classic layout. If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` is the only place to fix.
-- **Reading only.** The banner doesn't approve or tolerate snapshots.
+- **GitHub DOM.** The section mounts in `#partial-discussion-sidebar`, right after the Labels section (found by its `labels_updated` channel, or `.js-issue-labels`). If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` is the only place to fix.
+- **Conversation tab only.** GitHub only shows the sidebar there, so Commits, Checks, and Files changed show nothing.
+- **Reading only.** The extension doesn't approve or tolerate snapshots.
 - **Chrome only.**

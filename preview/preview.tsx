@@ -1,9 +1,9 @@
-// Dev-only harness: renders every banner state and the popup with mocked data.
+// Dev-only harness: renders every sidebar state and the popup with mocked data.
 // Build + open: node preview/build.mjs && open preview/out/index.html
 import { createRoot } from 'react-dom/client'
 
-import { Banner } from '../src/content/Banner'
 import { createShadowRoot } from '../src/content/shadow'
+import { hasContent, Sidebar } from '../src/content/Sidebar'
 import { Popup } from '../src/popup/Popup'
 import popupCss from '../src/popup/popup.css'
 import type { AuthState } from '../src/shared/messages'
@@ -123,16 +123,33 @@ const hiddenStates: [string, PrResults][] = [
     permissions: { request: async () => true },
 }
 
-function BannerHost({ results }: { results: PrResults }) {
+/** Our section between GitHub's own, as it sits under "Labels" on a PR. */
+function FakeSidebar({ results }: { results: PrResults }) {
     return (
-        <div
-            ref={(el) => {
-                if (!el || el.shadowRoot) {
-                    return
-                }
-                createShadowRoot(el).render(<Banner results={results} />)
-            }}
-        />
+        <div className="gh-sidebar">
+            <div className="discussion-sidebar-item">
+                <h3 className="discussion-sidebar-heading">Reviewers</h3>
+                <span>No reviews</span>
+            </div>
+            <div className="discussion-sidebar-item">
+                <h3 className="discussion-sidebar-heading">Labels</h3>
+                <span className="fake-label">stamphog</span>
+            </div>
+            <div
+                className="discussion-sidebar-item"
+                hidden={!hasContent(results)}
+                ref={(el) => {
+                    if (!el || el.shadowRoot) {
+                        return
+                    }
+                    createShadowRoot(el).render(<Sidebar results={results} />)
+                }}
+            />
+            <div className="discussion-sidebar-item">
+                <h3 className="discussion-sidebar-heading">Projects</h3>
+                <span>None yet</span>
+            </div>
+        </div>
     )
 }
 
@@ -148,28 +165,18 @@ if (popupMode) {
     document.body.dataset.theme = theme
     root.render(
         <div className="gh-page">
-            {states.map(([name, results]) => (
-                <section key={name}>
-                    <h2 className="state-name">{name}</h2>
-                    <div>
-                        <div className="fake-title">
-                            Redesign the navigation sidebar <span>#38012</span>
-                        </div>
-                        <div className="fake-tabs">
-                            <span className="on">Conversation</span>
-                            <span>Commits</span>
-                            <span>Checks</span>
-                            <span>Files changed</span>
-                        </div>
-                    </div>
-                    <BannerHost results={results} />
-                </section>
-            ))}
+            <div className="states">
+                {states.map(([name, results]) => (
+                    <section key={name}>
+                        <h2 className="state-name">{name}</h2>
+                        <FakeSidebar results={results} />
+                    </section>
+                ))}
+            </div>
             <h2 className="state-name">Renders nothing</h2>
-            {hiddenStates.map(([name, results]) => (
+            {hiddenStates.map(([name]) => (
                 <div key={name} className="hidden-state">
                     <span>{name}</span>
-                    <BannerHost results={results} />
                 </div>
             ))}
         </div>

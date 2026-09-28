@@ -9,7 +9,7 @@
 ## Screenshots
 
 <!--
-Required for anything a person can see: the banner, the popup, sign-in, or the extension's name and icon.
+Required for anything a person can see: the sidebar section, the popup, sign-in, or the extension's name and icon.
 Run `pnpm screenshots` and attach the images from preview/out/screenshots/ that changed, before and after.
 Check both light and dark. If the change can't be shown in the preview (e.g. placement on a real GitHub page),
 add a screenshot of the real page instead.

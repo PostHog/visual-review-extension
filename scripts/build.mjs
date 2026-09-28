@@ -14,7 +14,7 @@ const shared = {
     sourcemap: watch ? 'inline' : false,
     jsx: 'automatic',
     define: { 'process.env.NODE_ENV': JSON.stringify(watch ? 'development' : 'production') },
-    // Stylesheets are injected as <style> text (the banner lives in a shadow root).
+    // Stylesheets are injected as <style> text (the sidebar section lives in a shadow root).
     loader: { '.css': 'text' },
     logLevel: 'info',
 }
@@ -24,8 +24,8 @@ const builds = [
     { ...shared, entryPoints: { background: 'src/background/index.ts' }, format: 'esm', outdir },
     // Content scripts can't be modules, so the loader that runs on every GitHub page is a small IIFE…
     { ...shared, entryPoints: { content: 'src/content/index.ts' }, format: 'iife', outdir },
-    // …which dynamic-imports the banner module (React + hoggies) only for PRs in tracked repos.
-    { ...shared, entryPoints: { banner: 'src/content/mount.tsx' }, format: 'esm', outdir },
+    // …which dynamic-imports the sidebar module (React + hoggies) only for PRs in tracked repos.
+    { ...shared, entryPoints: { sidebar: 'src/content/mount.tsx' }, format: 'esm', outdir },
     { ...shared, entryPoints: { popup: 'src/popup/index.tsx' }, format: 'iife', outdir },
 ]
 
