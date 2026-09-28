@@ -11,7 +11,7 @@
     "test": "vitest run",
     "preview": "node scripts/build.mjs && node preview/build.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "zip": "node scripts/build.mjs && cd dist && zip -qr ../posthog-visual-review.zip ."
+    "zip": "node scripts/build.mjs && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip ."
   },
   "dependencies": {
     "@posthog/brand": "^0.12.3",
