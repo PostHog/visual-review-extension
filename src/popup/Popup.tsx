@@ -34,9 +34,6 @@ function SignedOut({ initialHost, signInError }: { initialHost: string; signInEr
     const [error, setError] = useState<string | null>(null)
 
     const signIn = async () => {
-        if (signInError) {
-            return
-        }
         setError(null)
         let host = CLOUD_AUTH_HOST
         if (mode === 'custom') {

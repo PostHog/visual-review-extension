@@ -86,7 +86,6 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
 ```bash
 pnpm install
 pnpm build        # Chrome → dist/
-pnpm build:chrome # explicit Chrome build
 pnpm build:firefox # Firefox → dist-firefox/
 pnpm dev          # rebuild on change, then reload the extension in chrome://extensions
 pnpm test         # vitest

@@ -7,6 +7,10 @@ if (!['chrome', 'firefox'].includes(browser)) {
     throw new Error(`Unknown browser: ${browser}`)
 }
 const outdir = browser === 'firefox' ? 'dist-firefox' : 'dist'
+// The client ID metadata document in PostHog/posthog.com at static/.well-known/oauth/visual-review/client-metadata.json.
+// It registers https://<extension id>.chromiumapp.org/, which the manifest's `key` pins, so only Chrome can use it.
+// Firefox builds take a registered public client from POSTHOG_OAUTH_CLIENT_ID, or null until one exists.
+const CHROME_CLIENT_ID = 'https://posthog.com/.well-known/oauth/visual-review/client-metadata.json'
 
 await rm(outdir, { recursive: true, force: true })
 await mkdir(outdir, { recursive: true })
@@ -19,7 +23,7 @@ const shared = {
     jsx: 'automatic',
     define: {
         'process.env.NODE_ENV': JSON.stringify(watch ? 'development' : 'production'),
-        POSTHOG_OAUTH_CLIENT_ID: JSON.stringify(browser === 'firefox' ? process.env.POSTHOG_OAUTH_CLIENT_ID || null : null),
+        POSTHOG_OAUTH_CLIENT_ID: JSON.stringify(browser === 'firefox' ? process.env.POSTHOG_OAUTH_CLIENT_ID || null : CHROME_CLIENT_ID),
     },
     // Stylesheets are injected as <style> text (the sidebar section lives in a shadow root).
     loader: { '.css': 'text' },

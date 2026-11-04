@@ -7,11 +7,8 @@ import { errorDetail } from './http'
 // The metadata document caps the client at these too, so keep the two lists in sync.
 const SCOPES = ['visual_review:read', 'user:read', 'project:read', 'organization:read']
 
-// Lives in PostHog/posthog.com at static/.well-known/oauth/visual-review/client-metadata.json. It
-// registers https://<extension id>.chromiumapp.org/, which the manifest's `key` pins.
-const DEFAULT_CLIENT_ID = 'https://posthog.com/.well-known/oauth/visual-review/client-metadata.json'
-const CONFIGURED_CLIENT_ID = typeof POSTHOG_OAUTH_CLIENT_ID === 'undefined' ? null : POSTHOG_OAUTH_CLIENT_ID
-const CLIENT_ID = CONFIGURED_CLIENT_ID ?? DEFAULT_CLIENT_ID
+// scripts/build.mjs sets the client per browser. Null means a Firefox build without a registered client.
+const CLIENT_ID = typeof POSTHOG_OAUTH_CLIENT_ID === 'undefined' ? null : POSTHOG_OAUTH_CLIENT_ID
 
 export interface Session {
     authHost: string
@@ -80,17 +77,18 @@ function toSession(authHost: string, clientId: string, token: TokenResponse, pre
     }
 }
 
-export function signInSetupError(redirectUri = extensionBrowser().identity.getRedirectURL()): string | undefined {
-    if (!CONFIGURED_CLIENT_ID && redirectUri !== 'https://coegljbgaffjilmoampifafjigkdmjaf.chromiumapp.org/') {
-        return `Firefox needs a registered OAuth client for ${redirectUri}. Build with POSTHOG_OAUTH_CLIENT_ID set to that public client ID. See the Firefox setup in README.`
-    }
+function missingClientError(redirectUri: string): string {
+    return `Firefox needs a registered OAuth client. Register a public client with the callback ${redirectUri}, then build with POSTHOG_OAUTH_CLIENT_ID set to its client ID. See "Firefox developer setup" in the README.`
+}
+
+export function signInSetupError(): string | undefined {
+    return CLIENT_ID ? undefined : missingClientError(extensionBrowser().identity.getRedirectURL())
 }
 
 export async function signIn(authHost: string): Promise<Session> {
     const redirectUri = extensionBrowser().identity.getRedirectURL()
-    const setupError = signInSetupError(redirectUri)
-    if (setupError) {
-        throw new SignInError(setupError)
+    if (!CLIENT_ID) {
+        throw new SignInError(missingClientError(redirectUri))
     }
     const verifier = randomString(48)
     const state = randomString(16)

@@ -5,7 +5,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 it('explains the missing Firefox OAuth registration before opening sign-in', async () => {
     const launchWebAuthFlow = vi.fn()
-    vi.stubGlobal('browser', { identity: {
+    vi.stubGlobal('browser', { runtime: { id: 'visual-review' }, identity: {
         getRedirectURL: () => 'https://example.extensions.allizom.org/',
         launchWebAuthFlow,
     } })
@@ -19,7 +19,7 @@ it.each(['registered-firefox-client', 'https://posthog.com/.well-known/oauth/vis
     const redirectUri = 'https://example.extensions.allizom.org/'
     let authorization: URL | undefined
     let tokenRequest: URLSearchParams | undefined
-    vi.stubGlobal('browser', { identity: {
+    vi.stubGlobal('browser', { runtime: { id: 'visual-review' }, identity: {
         getRedirectURL: () => redirectUri,
         launchWebAuthFlow: async ({ url }: { url: string }) => {
             authorization = new URL(url)

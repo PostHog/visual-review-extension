@@ -9,12 +9,12 @@ it('shows the Firefox registration prerequisite before requesting host access', 
     vi.stubGlobal('browser', {
         identity: { getRedirectURL: () => 'https://example.extensions.allizom.org/' },
         storage: { local: { get: async () => ({}) } },
-        runtime: { onMessage: { addListener: (callback: Listener) => { listener = callback } } },
+        runtime: { id: 'visual-review', onMessage: { addListener: (callback: Listener) => { listener = callback } } },
     })
     await import('./index')
     const response = await new Promise((resolve) => listener!({ type: 'auth:get' }, {}, resolve))
     expect(response).toMatchObject({ ok: true, data: {
         signedIn: false,
-        signInError: expect.stringContaining('Firefox needs a registered OAuth client for https://example.extensions.allizom.org/'),
+        signInError: expect.stringContaining('Register a public client with the callback https://example.extensions.allizom.org/'),
     } })
 })

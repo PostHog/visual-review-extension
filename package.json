@@ -12,10 +12,8 @@
     "preview": "node scripts/build.mjs && node preview/build.mjs",
     "screenshots": "node scripts/screenshots.mjs",
     "zip": "node scripts/build.mjs && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip .",
-    "build:chrome": "node scripts/build.mjs --browser=chrome",
     "build:firefox": "node scripts/build.mjs --browser=firefox",
     "dev:firefox": "node scripts/build.mjs --browser=firefox --watch",
-    "zip:chrome": "pnpm zip",
     "zip:firefox": "node scripts/build.mjs --browser=firefox && rm -f posthog-visual-review-firefox.zip && cd dist-firefox && zip -qr ../posthog-visual-review-firefox.zip ."
   },
   "dependencies": {
