@@ -8,7 +8,8 @@ A Manifest V3 Chrome and Firefox extension that shows PostHog visual review resu
 pnpm install
 pnpm typecheck      # tsc, strict
 pnpm test           # vitest
-pnpm build          # Chrome → dist/, load unpacked in chrome://extensions
+pnpm build          # both browsers: build:chrome, then build:firefox
+pnpm build:chrome   # Chrome → dist/, load unpacked in chrome://extensions
 pnpm build:firefox  # Firefox → dist-firefox/, load temporarily in about:debugging
 pnpm zip:firefox    # → posthog-visual-review-firefox.zip
 pnpm dev            # rebuild on change; reload the extension after each edit
@@ -16,7 +17,7 @@ pnpm preview        # build the design preview → preview/out/index.html
 pnpm screenshots    # PNGs of every sidebar state and the popup → preview/out/screenshots/
 ```
 
-CI runs typecheck, test, and both browser builds on every push. Run these before you open a PR. There's no formatter or linter, so match the code around you: 4-space indent, single quotes, no semicolons, strict TypeScript.
+CI runs typecheck, test, and `pnpm build` for both browsers on every push. Run these before you open a PR. There's no formatter or linter, so match the code around you: 4-space indent, single quotes, no semicolons, strict TypeScript.
 
 ## Rules that aren't obvious from the code
 

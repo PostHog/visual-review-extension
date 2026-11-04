@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Shows PostHog visual review results at the top of GitHub pull requests.",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "pnpm build:chrome && pnpm build:firefox",
+    "build:chrome": "node scripts/build.mjs --browser=chrome",
     "dev": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
