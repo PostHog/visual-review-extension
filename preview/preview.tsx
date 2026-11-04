@@ -103,7 +103,13 @@ const hiddenStates: [string, PrResults][] = [
         async sendMessage(req: { type: string }) {
             switch (req.type) {
                 case 'auth:get':
-                    return { ok: true, data: popupMode === 'signedIn' ? signedIn : { signedIn: false, host: 'https://oauth.posthog.com' } }
+                    return { ok: true, data: popupMode === 'signedIn' ? signedIn : {
+                        signedIn: false,
+                        host: 'https://oauth.posthog.com',
+                        signInError: popupMode === 'firefoxNeedsClient'
+                            ? 'Firefox needs a registered OAuth client. Register a public client with the callback https://5ed7694585fc080f01fd256960c1126b795185f5.extensions.allizom.org/, then build with POSTHOG_OAUTH_CLIENT_ID set to its client ID. See "Firefox developer setup" in the README.'
+                            : undefined,
+                    } }
                 case 'pr:results':
                     return { ok: true, data: states[0]![1] }
             }
