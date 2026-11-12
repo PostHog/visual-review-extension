@@ -106,7 +106,7 @@ pnpm screenshots                                          # PNGs of all of them 
 
 See [AGENTS.md](AGENTS.md) for how to work in this repo.
 
-**Icons** come from the brand logomark: run `node scripts/icons.mjs` (needs `rsvg-convert`).
+**Icons** are the paintbrush in `src/assets/logo/paintbrush.png` on a white rounded square: run `node scripts/icons.mjs` after changing it (needs ImageMagick 7, `magick`).
 
 ## Release
 
