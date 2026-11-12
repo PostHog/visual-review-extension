@@ -12,7 +12,8 @@
     "test": "vitest run",
     "preview": "node scripts/build.mjs && node preview/build.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "zip": "node scripts/build.mjs && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip .",
+    "zip": "pnpm zip:chrome && pnpm zip:firefox",
+    "zip:chrome": "node scripts/build.mjs --browser=chrome && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip .",
     "build:firefox": "node scripts/build.mjs --browser=firefox",
     "dev:firefox": "node scripts/build.mjs --browser=firefox --watch",
     "zip:firefox": "node scripts/build.mjs --browser=firefox && rm -f posthog-visual-review-firefox.zip && cd dist-firefox && zip -qr ../posthog-visual-review-firefox.zip ."
