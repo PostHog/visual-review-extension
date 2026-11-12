@@ -11,7 +11,9 @@ pnpm test           # vitest
 pnpm build          # both browsers: build:chrome, then build:firefox
 pnpm build:chrome   # Chrome → dist/, load unpacked in chrome://extensions
 pnpm build:firefox  # Firefox → dist-firefox/, load temporarily in about:debugging
-pnpm zip:firefox    # → posthog-visual-review-firefox.zip
+pnpm zip            # both browsers' release zips: zip:chrome, then zip:firefox
+pnpm zip:chrome     # Chrome → posthog-visual-review.zip
+pnpm zip:firefox    # Firefox → posthog-visual-review-firefox.zip
 pnpm dev            # rebuild on change; reload the extension after each edit
 pnpm preview        # build the design preview → preview/out/index.html
 pnpm screenshots    # PNGs of every tile state and the popup → preview/out/screenshots/

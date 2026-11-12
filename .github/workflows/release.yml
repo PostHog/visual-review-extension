@@ -30,7 +30,7 @@ jobs:
 
             - run: pnpm typecheck
             - run: pnpm test
-            - run: pnpm zip
+            - run: pnpm zip:chrome
             - run: pnpm zip:firefox
               env:
                   # A public OAuth client registered for Firefox's callback, set as a repository variable once
