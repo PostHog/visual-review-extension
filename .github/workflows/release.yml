@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag matching the manifest version (e.g. v0.2.0) to publish an installable zip.
+# Push a tag matching the manifest version (e.g. v0.2.0) to publish installable zips for Chrome and Firefox.
 on:
     push:
         tags: ['v*']
@@ -31,9 +31,14 @@ jobs:
             - run: pnpm typecheck
             - run: pnpm test
             - run: pnpm zip
+            - run: pnpm zip:firefox
+              env:
+                  # A public OAuth client registered for Firefox's callback, set as a repository variable once
+                  # one exists. Without it the Firefox add-on loads but can't sign in (see the README).
+                  POSTHOG_OAUTH_CLIENT_ID: ${{ vars.POSTHOG_OAUTH_CLIENT_ID_FIREFOX }}
 
-            # A fixed asset name keeps releases/latest/download/posthog-visual-review.zip stable.
+            # Fixed asset names keep releases/latest/download/<name>.zip stable.
             - name: Publish release
               env:
                   GH_TOKEN: ${{ github.token }}
-              run: gh release create "$GITHUB_REF_NAME" posthog-visual-review.zip --generate-notes --title "$GITHUB_REF_NAME"
+              run: gh release create "$GITHUB_REF_NAME" posthog-visual-review.zip posthog-visual-review-firefox.zip --generate-notes --title "$GITHUB_REF_NAME"

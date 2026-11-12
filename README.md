@@ -31,6 +31,8 @@ pnpm zip:firefox        # → posthog-visual-review-firefox.zip
 pnpm dev:firefox        # rebuild on change
 ```
 
+Each release also has [`posthog-visual-review-firefox.zip`](https://github.com/PostHog/visual-review-extension/releases/latest/download/posthog-visual-review-firefox.zip), built from the same tag; load it the same way after unzipping it. It's built with the repository variable `POSTHOG_OAUTH_CLIENT_ID_FIREFOX` as its client ID, so it can only sign in once that variable holds a registered Firefox client.
+
 Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist-firefox/manifest.json`. Firefox 128 or newer is required. Temporary add-ons disappear when Firefox restarts; installing permanently requires Mozilla signing, which these commands do not perform.
 
 **Sign-in requires Firefox OAuth registration.** The hosted client metadata currently registers only the Chrome callback. The default Firefox build loads, and the signed-out popup shows the actual Firefox callback and disables sign-in until you configure a client. The stable Gecko ID is `visual-review@posthog.com`; do not change it after registering a client.
@@ -118,7 +120,7 @@ See [AGENTS.md](AGENTS.md) for how to work in this repo.
    git tag v0.2.0 && git push origin v0.2.0
    ```
 
-The [release workflow](.github/workflows/release.yml) checks that the tag matches the manifest version, runs the checks, and attaches `posthog-visual-review.zip` to a GitHub release. The download link in [Install](#install) always points at the newest one.
+The [release workflow](.github/workflows/release.yml) checks that the tag matches the manifest version, runs the checks, and attaches `posthog-visual-review.zip` (Chrome) and `posthog-visual-review-firefox.zip` to a GitHub release. The download links always point at the newest one.
 
 ## Layout
 
