@@ -1,5 +1,5 @@
 import { HedgehogError } from '@posthog/brand/hoggies'
-import { type ReactNode, useState } from 'react'
+import { type PointerEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { BrandLogomark } from '../shared/BrandLogomark'
 import { type Hoggie, STATE_COPY, type Tone } from '../shared/runCopy'
@@ -9,11 +9,12 @@ import { timeAgo } from '../shared/time'
 import type { PrResults, RunView } from '../shared/types'
 import {
     CheckCircleFillIcon,
-    ChevronDownIcon,
     DotFillIcon,
     EyeIcon,
     LinkExternalIcon,
+    LockIcon,
     SyncIcon,
+    UnlockIcon,
     XCircleFillIcon,
 } from './icons'
 
@@ -125,12 +126,85 @@ export function hasContent(results: PrResults | null): results is Extract<PrResu
     return results?.kind === 'runs' || results?.kind === 'error'
 }
 
+// GitHub's own tiles: hovering opens the panel after a short pause, and it closes shortly after
+// the pointer leaves the tile and the panel. A click pins it open until the next click.
+const OPEN_DELAY_MS = 400
+const CLOSE_DELAY_MS = 200
+
+function useHoverPanel() {
+    const [hovered, setHovered] = useState(false)
+    const [pinned, setPinned] = useState(false)
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+    const panel = useRef<HTMLDivElement>(null)
+    const open = hovered || pinned
+
+    const later = (next: boolean, delay: number) => {
+        clearTimeout(timer.current)
+        timer.current = setTimeout(() => setHovered(next), delay)
+    }
+    useEffect(() => () => clearTimeout(timer.current), [])
+
+    // A manual popover: no light dismiss, so a pinned panel stays put, like GitHub's.
+    useEffect(() => {
+        const el = panel.current
+        if (el && open !== el.matches(':popover-open')) {
+            if (open) {
+                el.showPopover()
+            } else {
+                el.hidePopover()
+            }
+        }
+    }, [open])
+
+    useEffect(() => {
+        if (!open) {
+            return
+        }
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                clearTimeout(timer.current)
+                setPinned(false)
+                setHovered(false)
+            }
+        }
+        document.addEventListener('keydown', onKey)
+        return () => document.removeEventListener('keydown', onKey)
+    }, [open])
+
+    const enter = (e: PointerEvent) => {
+        if (e.pointerType === 'mouse') {
+            // Already open (coming back from the panel): just cancel the close.
+            later(true, hovered ? 0 : OPEN_DELAY_MS)
+        }
+    }
+    const leave = (e: PointerEvent) => {
+        if (e.pointerType === 'mouse') {
+            later(false, CLOSE_DELAY_MS)
+        }
+    }
+    const togglePin = () => {
+        clearTimeout(timer.current)
+        // Unpinning closes the panel even with the pointer still on the tile, like GitHub's.
+        setHovered(false)
+        setPinned((p) => !p)
+    }
+    return {
+        open,
+        pinned,
+        panel,
+        tileProps: { onPointerEnter: enter, onPointerLeave: leave },
+        panelProps: { onPointerEnter: enter, onPointerLeave: leave },
+        togglePin,
+    }
+}
+
 /**
  * A tile in GitHub's merge box, next to Checks, Comments, and Approvals, built like theirs: a
- * label, a short summary, and a bar with one segment per run type. Clicking it opens the runs.
+ * label, a short summary, and a bar with one segment per run type. Hovering it shows the runs,
+ * and clicking pins them open.
  */
 export function StatusTile({ results }: { results: PrResults | null }) {
-    const [open, setOpen] = useState(false)
+    const { open, pinned, panel, tileProps, panelProps, togglePin } = useHoverPanel()
     if (!hasContent(results)) {
         // Only take up space when there's a run to report on. Signing in lives in the toolbar popup.
         return null
@@ -143,19 +217,23 @@ export function StatusTile({ results }: { results: PrResults | null }) {
                   label: `${run.run_type}: ${STATE_COPY[runState(run)].label.toLowerCase()}`,
               }))
             : []
+    const PinIcon = pinned ? LockIcon : UnlockIcon
     return (
         <>
-            <div className={`tile ${open ? 'open' : ''}`}>
+            <div className={`tile ${open ? 'open' : ''}`} {...tileProps}>
                 <button
                     type="button"
                     className="tile-button"
-                    popoverTarget={PANEL_ID}
-                    aria-label={`Visual review: ${summary}. ${segments.map((s) => s.label).join(', ')}`}
+                    aria-controls={PANEL_ID}
+                    aria-expanded={open}
+                    aria-label={`Visual review: ${summary}. ${segments.map((s) => s.label).join(', ')}. ${pinned ? 'Unpin' : 'Pin'} runs`}
+                    onClick={togglePin}
                 />
                 <div className="label-row">
+                    <BrandLogomark className="tile-logomark" />
                     <strong className="label-text">Visual review</strong>
                     <span className="tile-summary">{summary}</span>
-                    <ChevronDownIcon className="nav-icon" />
+                    <PinIcon size={14} className={`pin-icon ${pinned ? 'pinned' : ''}`} />
                 </div>
                 {segments.length > 0 ? (
                     <div className="bar" aria-hidden="true">
@@ -168,11 +246,13 @@ export function StatusTile({ results }: { results: PrResults | null }) {
                 )}
             </div>
             <div
+                ref={panel}
                 id={PANEL_ID}
-                popover="auto"
+                popover="manual"
+                role="group"
                 className="panel"
                 aria-label="Visual review runs"
-                onToggle={(e) => setOpen(e.newState === 'open')}
+                {...panelProps}
             >
                 <RunsPanel results={results} />
             </div>

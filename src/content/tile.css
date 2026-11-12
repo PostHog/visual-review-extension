@@ -101,32 +101,39 @@
     text-overflow: ellipsis;
 }
 
-/* Appears on hover and focus, like the icon on GitHub's tiles. */
-.nav-icon {
+/* The PostHog mark, so the tile reads as ours among GitHub's. */
+.tile-logomark {
+    width: 16px;
+    height: auto;
+    flex: none;
+    color: var(--fgColor-default, #1f2328);
+}
+
+/*
+ * The pin, like GitHub's tiles: an open lock on hover and focus (the panel follows the pointer),
+ * a closed lock that stays visible once a click pins the panel open.
+ */
+.pin-icon {
     flex: none;
     margin-inline-start: auto;
     color: var(--fgColor-muted, #59636e);
     opacity: 0;
     visibility: hidden;
 }
-.tile:hover .nav-icon,
-.tile:focus-within .nav-icon,
-.tile.open .nav-icon {
+.tile:hover .pin-icon,
+.tile:focus-within .pin-icon,
+.pin-icon.pinned {
     opacity: 1;
     visibility: visible;
-}
-.tile.open .nav-icon {
-    transform: rotate(180deg);
 }
 @media (prefers-reduced-motion: no-preference) {
     .tile {
         transition: background-color 100ms ease;
     }
-    .nav-icon {
+    .pin-icon {
         transition:
             opacity 100ms ease,
-            visibility 100ms,
-            transform 100ms ease;
+            visibility 100ms;
     }
 }
 

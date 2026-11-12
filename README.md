@@ -6,7 +6,7 @@ A Chrome extension, with a Firefox developer build, that shows [visual review](h
 
 - **On GitHub:** a "Visual review" tile in the PR's merge box, next to Checks, Comments, and Approvals, built like theirs. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes.
   - The tile shows the overall state in a few words ("5 to review", "Approved", "No changes", …) and a bar with one segment per run type, colored by its state.
-  - Clicking it opens a panel with one row per run type (storybook, playwright, …), each linking to its run in PostHog, and a button to review in PostHog.
+  - Hovering it opens a panel, like GitHub's Checks tile, with one row per run type (storybook, playwright, …), each linking to its run in PostHog, and a button to review in PostHog. Clicking the tile pins the panel open (the lock icon) until the next click or Esc.
 
   It only shows up when there's something to report, and only where GitHub shows the merge box: the Conversation tab of an open PR.
 - **Popup (toolbar icon):** the only place to sign in. It also shows the current tab's status, the repos being watched, and a default project picker, styled like the PostHog app (RoundHog, LemonButton, hoggies from `@posthog/brand`).

@@ -18,8 +18,8 @@ await mkdir(outdir, { recursive: true })
 
 const page = pathToFileURL(resolve('preview/out/index.html')).href
 const shots = [
-    { name: 'tile-light', query: 'theme=light', size: '980,2700' },
-    { name: 'tile-dark', query: 'theme=dark', size: '980,2700' },
+    { name: 'tile-light', query: 'theme=light', size: '1080,2700' },
+    { name: 'tile-dark', query: 'theme=dark', size: '1080,2700' },
     { name: 'popup-signed-in', query: 'popup=signedIn', size: '360,640' },
     { name: 'popup-signed-out', query: 'popup=signedOut', size: '360,520' },
     { name: 'popup-firefox-needs-client-light', query: 'popup=firefoxNeedsClient', size: '360,640' },
