@@ -2,7 +2,7 @@
 
 > **Internal tool for the PostHog team.** It isn't a supported PostHog product. The code is public, but it's built around how we use visual review ourselves.
 
-A Chrome extension that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results in the merge box at the top of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
+A Chrome extension, with a Firefox developer build, that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results in the merge box at the top of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
 
 - **On GitHub:** a "Visual review" tile in the PR's merge box, next to Checks, Comments, and Approvals, built like theirs. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes.
   - The tile shows the overall state in a few words ("5 to review", "Approved", "No changes", …) and a bar with one segment per run type, colored by its state.
@@ -21,6 +21,43 @@ A Chrome extension that shows [visual review](https://github.com/PostHog/posthog
 
 **To update:** download the new zip, unzip it over the same folder, and click the reload icon on the extension's card in `chrome://extensions`. Reloading keeps your sign-in. Removing the extension clears it.
 
+## Firefox developer setup
+
+Firefox uses the same extension code with a browser-specific manifest. Build and load it temporarily:
+
+```bash
+pnpm build:firefox      # → dist-firefox/
+pnpm zip:firefox        # → posthog-visual-review-firefox.zip
+pnpm dev:firefox        # rebuild on change
+```
+
+Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist-firefox/manifest.json`. Firefox 128 or newer is required. Temporary add-ons disappear when Firefox restarts; installing permanently requires Mozilla signing, which these commands do not perform.
+
+**Sign-in requires Firefox OAuth registration.** The hosted client metadata currently registers only the Chrome callback. The default Firefox build loads, and the signed-out popup shows the actual Firefox callback and disables sign-in until you configure a client. The stable Gecko ID is `visual-review@posthog.com`; do not change it after registering a client.
+
+For a developer build, register a public authorization-code client on the PostHog host you will use. Use the callback printed by the extension, PKCE with `S256`, token endpoint authentication `none`, and these scopes: `visual_review:read user:read project:read organization:read`. An instance administrator can register that client, or instances that support dynamic registration accept:
+
+```bash
+curl --fail-with-body https://oauth.posthog.com/oauth/register/ \
+    -H 'Content-Type: application/json' \
+    --data '{"client_name":"Visual Review for Firefox","redirect_uris":["<callback shown by the extension>"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none","scope":"visual_review:read user:read project:read organization:read"}'
+```
+
+For self-hosted or local development, replace `https://oauth.posthog.com` with your instance URL. Use the returned public `client_id`, never a client secret, and rebuild:
+
+```bash
+POSTHOG_OAUTH_CLIENT_ID='<registered public client_id>' pnpm build:firefox
+# Or use the same environment variable with pnpm zip:firefox / pnpm dev:firefox.
+```
+
+Chrome builds always use the hosted first-party client.
+
+Reload the temporary add-on and select the same PostHog host in the popup. Registration belongs to that host; a client registered on a self-hosted instance cannot sign in through Cloud. The Cloud registration proxy registers the client in both Cloud regions.
+
+PostHog reserves client names that start with its brand, so the developer registration uses "Visual Review for Firefox".
+
+A shared first-party Firefox client still requires a hosted metadata document that registers Firefox's callback. Once available, its HTTPS URL can be supplied as `POSTHOG_OAUTH_CLIENT_ID`. This extension does not register anonymous clients automatically or send Firefox sign-in through Chrome's callback.
+
 ## How it works
 
 ```
@@ -29,10 +66,10 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
                     └── tracked PR ──▶ tile.js ───▶ service worker ──(OAuth bearer)──▶ PostHog API
 ```
 
-- **Auth.** OAuth 2.0 authorization code + PKCE, run with `chrome.identity.launchWebAuthFlow`.
+- **Auth.** OAuth 2.0 authorization code + PKCE, run through the shared browser adapter and the browser's `identity.launchWebAuthFlow`.
   - PostHog Cloud goes through `oauth.posthog.com`, which works out whether the user is on US or EU and returns `posthog_base_url` with the token.
   - Self-hosted and local instances are called directly.
-  - The `client_id` is the URL of a [client ID metadata document](https://posthog.com/.well-known/oauth/visual-review/client-metadata.json) (CIMD) that lives in [PostHog/posthog.com](https://github.com/PostHog/posthog.com) at `static/.well-known/oauth/visual-review/client-metadata.json`. Each PostHog instance fetches it, so **nothing needs to be set up in PostHog first**, and it's the same client on US, EU, and self-hosted. A self-hosted instance needs outbound HTTPS to posthog.com.
+  - The `client_id` is the URL of a [client ID metadata document](https://posthog.com/.well-known/oauth/visual-review/client-metadata.json) (CIMD) that lives in [PostHog/posthog.com](https://github.com/PostHog/posthog.com) at `static/.well-known/oauth/visual-review/client-metadata.json`. Each PostHog instance fetches it, so **Chrome needs no client registration in PostHog**, and it's the same client on US, EU, and self-hosted. A self-hosted instance needs outbound HTTPS to posthog.com.
   - The document registers one redirect, `https://coegljbgaffjilmoampifafjigkdmjaf.chromiumapp.org/`. The `key` in `src/manifest.json` pins that extension ID wherever the folder lives, so don't change the key without updating the document.
   - `key` is the public half. The private half is in 1Password as **Visual Review extension signing key**. Loading unpacked never needs it; it's only for signing a `.crx` or a first Chrome Web Store upload that keeps the same ID. Never commit it.
   - Scopes: `visual_review:read user:read project:read organization:read`. The document caps the client at the same list, so a new scope goes in both.
@@ -48,7 +85,9 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
 
 ```bash
 pnpm install
-pnpm build        # → dist/
+pnpm build         # Chrome and Firefox
+pnpm build:chrome  # Chrome → dist/
+pnpm build:firefox # Firefox → dist-firefox/
 pnpm dev          # rebuild on change, then reload the extension in chrome://extensions
 pnpm test         # vitest
 pnpm typecheck
@@ -61,7 +100,7 @@ To use a local PostHog, open the popup, choose **Self-hosted / local**, and ente
 **Design preview.** Every tile state and the popup render with mock data, no extension or sign-in needed:
 
 ```bash
-pnpm preview && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut
+pnpm preview && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut, ?popup=firefoxNeedsClient
 pnpm screenshots                                          # PNGs of all of them → preview/out/screenshots/ (needs Chrome)
 ```
 
@@ -93,6 +132,7 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 | `src/content/mount.tsx`, `App.tsx`, `StatusTile.tsx` | The merge box tile and its panel, rendered in a shadow root |
 | `src/content/mergebox.css`        | The tile's page-level styles that depend on GitHub's markup              |
 | `src/popup/`                      | Popup UI                                                                 |
+| `src/shared/browser.ts`          | Shared access to native Firefox `browser` APIs and Chrome `chrome` APIs   |
 | `src/shared/runState.ts`          | Run → state rules, mirroring `REVIEW_STATE_FILTERS` in the backend       |
 | `src/shared/runCopy.ts`           | Label, tone, and hoggie for each state                                   |
 | `src/shared/runSummary.ts`        | The words shown for runs: tile summary, panel headline, per-run detail   |
@@ -102,4 +142,4 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 - **GitHub DOM.** The tile mounts last in the row of merge box tiles, found through their `data-testid="mini-status"`. GitHub lays that row out in three fixed columns, so `src/content/mergebox.css` makes it four, and squares off the tile's corner while one of GitHub's tiles is expanded (matched by its `MiniStatusConnected` class name). If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` and `mergebox.css` are the places to fix.
 - **Open PRs, Conversation tab only.** GitHub only shows the merge box there, so merged and closed PRs, Commits, Checks, and Files changed show nothing.
 - **Reading only.** The extension doesn't approve or tolerate snapshots.
-- **Chrome only.**
+- **Firefox sign-in.** The default hosted OAuth client registers only Chrome. Firefox developer builds need a separately registered public client as described above.

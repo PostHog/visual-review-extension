@@ -175,7 +175,16 @@
     );
 }
 
-/* ---- The panel: a popover under the tile, styled as a Primer overlay ---- */
+/*
+ * ---- The panel: a popover under the tile, styled as a Primer overlay ----
+ * Browsers without CSS anchor positioning (older Firefox) centre it in the window instead.
+ */
+@supports not (position-anchor: --a) {
+    .panel.panel {
+        inset: 0;
+        margin: auto;
+    }
+}
 
 .panel {
     position-anchor: --visual-review-tile;

@@ -5,13 +5,17 @@
   "type": "module",
   "description": "Shows PostHog visual review results at the top of GitHub pull requests.",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "pnpm build:chrome && pnpm build:firefox",
+    "build:chrome": "node scripts/build.mjs --browser=chrome",
     "dev": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "preview": "node scripts/build.mjs && node preview/build.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "zip": "node scripts/build.mjs && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip ."
+    "zip": "node scripts/build.mjs && rm -f posthog-visual-review.zip && cd dist && zip -qr ../posthog-visual-review.zip .",
+    "build:firefox": "node scripts/build.mjs --browser=firefox",
+    "dev:firefox": "node scripts/build.mjs --browser=firefox --watch",
+    "zip:firefox": "node scripts/build.mjs --browser=firefox && rm -f posthog-visual-review-firefox.zip && cd dist-firefox && zip -qr ../posthog-visual-review-firefox.zip ."
   },
   "dependencies": {
     "@posthog/brand": "^0.12.3",

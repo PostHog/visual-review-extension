@@ -3,6 +3,7 @@ import { Logo } from '@posthog/brand/logo'
 import { useEffect, useState } from 'react'
 
 import { BrandLogomark } from '../shared/BrandLogomark'
+import { extensionBrowser } from '../shared/browser'
 import { errorMessage } from '../shared/errors'
 import { parsePullRequestUrl, repoFullName } from '../shared/github'
 import { CLOUD_AUTH_HOST, normalizeHost } from '../shared/host'
@@ -27,7 +28,7 @@ function hostLabel(host: string): string {
     return new URL(host).host
 }
 
-function SignedOut({ initialHost }: { initialHost: string }) {
+function SignedOut({ initialHost, signInError }: { initialHost: string; signInError?: string }) {
     const [mode, setMode] = useState<'cloud' | 'custom'>(initialHost === CLOUD_AUTH_HOST ? 'cloud' : 'custom')
     const [customHost, setCustomHost] = useState(initialHost === CLOUD_AUTH_HOST ? 'http://localhost:8010' : initialHost)
     const [busy, setBusy] = useState(false)
@@ -47,7 +48,7 @@ function SignedOut({ initialHost }: { initialHost: string }) {
         setBusy(true)
         try {
             // Custom hosts aren't in the manifest's host_permissions; ask while we have a user gesture.
-            if (mode === 'custom' && !(await chrome.permissions.request({ origins: [`${host}/*`] }))) {
+            if (mode === 'custom' && !(await extensionBrowser().permissions.request({ origins: [`${host}/*`] }))) {
                 throw new Error(`Permission to reach ${host} was declined`)
             }
             await send({ type: 'auth:signIn', host })
@@ -91,7 +92,7 @@ function SignedOut({ initialHost }: { initialHost: string }) {
             </div>
 
             {mode === 'cloud' ? (
-                <p className="hint">US or EU is picked automatically when you sign in.</p>
+                !signInError && <p className="hint">US or EU is picked automatically when you sign in.</p>
             ) : (
                 <label className="field">
                     <span>Instance URL</span>
@@ -105,9 +106,9 @@ function SignedOut({ initialHost }: { initialHost: string }) {
                 </label>
             )}
 
-            {error && <div className="callout callout--danger">{error}</div>}
+            {(signInError || error) && <div className="callout callout--danger">{signInError || error}</div>}
 
-            <button type="button" className="lemon-button lemon-button--primary" onClick={signIn} disabled={busy}>
+            <button type="button" className="lemon-button lemon-button--primary" onClick={signIn} disabled={busy || !!signInError}>
                 <span>{busy ? 'Waiting for PostHog…' : 'Sign in with PostHog'}</span>
             </button>
         </div>
@@ -326,7 +327,7 @@ export function Popup() {
     useEffect(() => {
         const loadAuth = () => void send({ type: 'auth:get' }).then(setAuth)
         loadAuth()
-        void chrome.tabs
+        void extensionBrowser().tabs
             .query({ active: true, currentWindow: true })
             .then(([tab]) => setPr(tab?.url ? parsePullRequestUrl(tab.url) : null))
         return onStorageChange(WATCHED, loadAuth)
@@ -341,7 +342,7 @@ export function Popup() {
                 </span>
                 <span className="product-tag">Visual review</span>
             </header>
-            {auth && (auth.signedIn ? <SignedIn auth={auth} pr={pr} /> : <SignedOut initialHost={auth.host} />)}
+            {auth && (auth.signedIn ? <SignedIn auth={auth} pr={pr} /> : <SignedOut initialHost={auth.host} signInError={auth.signInError} />)}
             <p className="internal-note">
                 An internal tool for the PostHog team. It isn’t a supported PostHog product.
             </p>
