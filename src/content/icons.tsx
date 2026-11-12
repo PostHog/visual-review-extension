@@ -1,16 +1,17 @@
-// Octicons (MIT, github.com/primer/octicons), inlined so the sidebar reads as native GitHub UI.
+// Octicons (MIT, github.com/primer/octicons), inlined so the tile reads as native GitHub UI.
 
 interface IconProps {
     className?: string
+    size?: number
 }
 
-function Octicon({ d, className }: IconProps & { d: string }) {
+function Octicon({ d, className, size = 16 }: IconProps & { d: string }) {
     return (
         <svg
             aria-hidden="true"
             viewBox="0 0 16 16"
-            width={16}
-            height={16}
+            width={size}
+            height={size}
             fill="currentColor"
             className={`octicon ${className ?? ''}`}
         >
@@ -53,5 +54,20 @@ export const SyncIcon = (p: IconProps) => (
     <Octicon
         {...p}
         d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"
+    />
+)
+
+// The pin on GitHub's merge box tiles: unlocked while the panel follows the pointer, locked once pinned.
+export const LockIcon = (p: IconProps) => (
+    <Octicon
+        {...p}
+        d="M4 4a4 4 0 0 1 8 0v2h.25c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25v-5.5C2 6.784 2.784 6 3.75 6H4Zm8.25 3.5h-8.5a.25.25 0 0 0-.25.25v5.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25ZM10.5 6V4a2.5 2.5 0 1 0-5 0v2Z"
+    />
+)
+
+export const UnlockIcon = (p: IconProps) => (
+    <Octicon
+        {...p}
+        d="M5.5 4v2h7A1.5 1.5 0 0 1 14 7.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-6A1.5 1.5 0 0 1 3.499 6H4V4a4 4 0 0 1 7.371-2.154.75.75 0 0 1-1.264.808A2.5 2.5 0 0 0 5.5 4Zm-2 3.5v6h9v-6h-9Z"
     />
 )

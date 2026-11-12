@@ -1,9 +1,11 @@
-// Dev-only harness: renders every sidebar state and the popup with mocked data.
+// Dev-only harness: renders every merge box tile state and the popup with mocked data.
 // Build + open: node preview/build.mjs && open preview/out/index.html
+import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import mergeboxCss from '../src/content/mergebox.css'
 import { createShadowRoot } from '../src/content/shadow'
-import { hasContent, Sidebar } from '../src/content/Sidebar'
+import { RunsPanel, StatusTile } from '../src/content/StatusTile'
 import { Popup } from '../src/popup/Popup'
 import popupCss from '../src/popup/popup.css'
 import type { AuthState } from '../src/shared/messages'
@@ -129,32 +131,79 @@ const hiddenStates: [string, PrResults][] = [
     permissions: { request: async () => true },
 }
 
-/** Our section between GitHub's own, as it sits under "Labels" on a PR. */
-function FakeSidebar({ results }: { results: PrResults }) {
+/** A shadow root with the tile's styles, rendering `children`, like the extension does on GitHub. */
+function Shadow({
+    as: Tag = 'div',
+    id,
+    plain,
+    children,
+}: {
+    as?: 'div' | 'section'
+    id?: string
+    /** Not a tile: drop the tile's host box (divider, corner, clipping). */
+    plain?: boolean
+    children: ReactNode
+}) {
     return (
-        <div className="gh-sidebar">
-            <div className="discussion-sidebar-item">
-                <h3 className="discussion-sidebar-heading">Reviewers</h3>
-                <span>No reviews</span>
+        <Tag
+            id={id}
+            style={plain ? { border: 0, overflow: 'visible' } : undefined}
+            ref={(el: HTMLElement | null) => {
+                if (el && !el.shadowRoot) {
+                    createShadowRoot(el).render(children)
+                }
+            }}
+        />
+    )
+}
+
+/** One of GitHub's own status tiles, as far as looks go. */
+function GhTile({ label, summary, segments }: { label: string; summary?: string; segments?: [string, number][] }) {
+    return (
+        <section className="gh-tile">
+            <div className="gh-tile-label">
+                <strong>{label}</strong>
+                {summary && <span className="gh-tile-summary">{summary}</span>}
             </div>
-            <div className="discussion-sidebar-item">
-                <h3 className="discussion-sidebar-heading">Labels</h3>
-                <span className="fake-label">stamphog</span>
+            {segments ? (
+                <div className="gh-bar">
+                    {segments.map(([tone, width], i) => (
+                        <span key={i} className={`gh-segment gh-${tone}`} style={{ width: `${width}%` }} />
+                    ))}
+                </div>
+            ) : (
+                <div className="gh-bar-unavailable" />
+            )}
+        </section>
+    )
+}
+
+/** GitHub's merge box with our tile last in its row of status tiles, and the tile's panel below. */
+function FakeMergeBox({ results, narrow }: { results: PrResults; narrow?: boolean }) {
+    return (
+        <div className={narrow ? 'gh-merge narrow' : 'gh-merge'}>
+            <div className="gh-mergebox">
+                <div className="gh-recommended">
+                    <strong>Approval required</strong>
+                    <span>Request another approving review before this can merge.</span>
+                </div>
+                <div className="gh-grid">
+                    <section className="gh-tiles">
+                        <GhTile label="Checks" summary="4 pending" segments={[['success', 46], ['neutral', 52], ['attention', 2]]} />
+                        <GhTile label="Comments" />
+                        <GhTile label="Approvals" summary="1 still required" segments={[['attention', 100]]} />
+                        <Shadow as="section" id="posthog-visual-review">
+                            <StatusTile results={results} />
+                        </Shadow>
+                    </section>
+                </div>
             </div>
-            <div
-                className="discussion-sidebar-item"
-                hidden={!hasContent(results)}
-                ref={(el) => {
-                    if (!el || el.shadowRoot) {
-                        return
-                    }
-                    createShadowRoot(el).render(<Sidebar results={results} />)
-                }}
-            />
-            <div className="discussion-sidebar-item">
-                <h3 className="discussion-sidebar-heading">Projects</h3>
-                <span>None yet</span>
-            </div>
+            {/* Opens as a popover under the tile on GitHub; shown in place here. */}
+            <Shadow plain>
+                <div className="panel" style={{ position: 'static', margin: '8px 0 0 auto' }}>
+                    <RunsPanel results={results} />
+                </div>
+            </Shadow>
         </div>
     )
 }
@@ -169,16 +218,21 @@ if (popupMode) {
 } else {
     const theme = params.get('theme') ?? 'light'
     document.body.dataset.theme = theme
+    // GitHub resolves its theme into the page's color-scheme; the logomark reads it from there.
+    document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
+    const style = document.createElement('style')
+    style.textContent = mergeboxCss
+    document.head.append(style)
     root.render(
         <div className="gh-page">
-            <div className="states">
-                {states.map(([name, results]) => (
-                    <section key={name}>
-                        <h2 className="state-name">{name}</h2>
-                        <FakeSidebar results={results} />
-                    </section>
-                ))}
-            </div>
+            {states.map(([name, results]) => (
+                <section key={name}>
+                    <h2 className="state-name">{name}</h2>
+                    <FakeMergeBox results={results} />
+                </section>
+            ))}
+            <h2 className="state-name">Narrow merge box (under 768px): tiles stack</h2>
+            <FakeMergeBox results={states[0]![1]} narrow />
             <h2 className="state-name">Renders nothing</h2>
             {hiddenStates.map(([name]) => (
                 <div key={name} className="hidden-state">

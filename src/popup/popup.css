@@ -130,10 +130,6 @@ body {
     width: 64px;
     height: auto;
 }
-/* The hedgehog's head is drawn in #111; follow the text color so it survives dark mode. */
-.brand-logomark path[fill='#111'] {
-    fill: currentColor;
-}
 
 .product-tag {
     padding: 1px 8px;

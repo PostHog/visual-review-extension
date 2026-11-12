@@ -2,13 +2,13 @@
 
 > **Internal tool for the PostHog team.** It isn't a supported PostHog product. The code is public, but it's built around how we use visual review ourselves.
 
-A Chrome extension, with a Firefox developer build, that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results in the sidebar of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
+A Chrome extension, with a Firefox developer build, that shows [visual review](https://github.com/PostHog/posthog/tree/master/products/visual_review) results in the merge box at the top of GitHub pull requests, so nobody has to scroll to the checks at the bottom of the page.
 
-- **On GitHub:** a "Visual review" section in the PR's sidebar, right after Labels. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes. It shows:
-  - the overall state (needs review, approved, no changes, in progress, failed)
-  - one row per run type (storybook, playwright, …), each linking to its run in PostHog
-  
-  It only shows up when there's something to report, and only on the Conversation tab, where GitHub shows the sidebar.
+- **On GitHub:** a "Visual review" tile in the PR's merge box, next to Checks, Comments, and Approvals, built like theirs. It uses GitHub's own Primer variables, so it follows light, dark, and dimmed themes.
+  - The tile shows the overall state in a few words ("5 to review", "Approved", "No changes", …) and a bar with one segment per run type, colored by its state.
+  - Hovering it opens a panel, like GitHub's Checks tile, with one row per run type (storybook, playwright, …), each linking to its run in PostHog, and a button to review in PostHog. Clicking the tile pins the panel open (the lock icon) until the next click or Esc.
+
+  It only shows up when there's something to report, and only where GitHub shows the merge box: the Conversation tab of an open PR.
 - **Popup (toolbar icon):** the only place to sign in. It also shows the current tab's status, the repos being watched, and a default project picker, styled like the PostHog app (RoundHog, LemonButton, hoggies from `@posthog/brand`).
 
 ## Install
@@ -63,7 +63,7 @@ A shared first-party Firefox client still requires a hosted metadata document th
 ```
 GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──▶ not a tracked PR: nothing, no request
                     │
-                    └── tracked PR ──▶ sidebar.js ─▶ service worker ──(OAuth bearer)──▶ PostHog API
+                    └── tracked PR ──▶ tile.js ───▶ service worker ──(OAuth bearer)──▶ PostHog API
 ```
 
 - **Auth.** OAuth 2.0 authorization code + PKCE, run through the shared browser adapter and the browser's `identity.launchWebAuthFlow`.
@@ -77,8 +77,8 @@ GitHub page ──(content.js, 2 KB)── repo index in chrome.storage ──�
   - It is rebuilt on sign-in, when the default project changes, and from the popup's Refresh button.
   - A visit to an unknown repo rebuilds it at most hourly, so newly enabled repos show up. After a failure it backs off for 5 minutes.
   - The default project wins when a repo is set up in more than one project.
-- **Loader + sidebar.** `content.js` runs on every GitHub page but only parses the URL and reads the index. For a PR in a tracked repo it imports `sidebar.js` (React and the hoggies). Everything else costs no network request and never wakes the worker.
-- **Runs.** The newest non-superseded run is kept for each run type. While a run is processing, the section refreshes every 15s; a tracked PR with no runs yet is checked every minute. It also refreshes when you come back to the tab.
+- **Loader + tile.** `content.js` runs on every GitHub page but only parses the URL and reads the index. For a PR in a tracked repo it imports `tile.js` (React and the hoggies). Everything else costs no network request and never wakes the worker.
+- **Runs.** The newest non-superseded run is kept for each run type. While a run is processing, the tile refreshes every 15s; a tracked PR with no runs yet is checked every minute. It also refreshes when you come back to the tab.
 - **Account state.** `background/session.ts` is the only place that clears the session, profile, and index. Every surface re-reads state when `chrome.storage` changes, so signing in or out updates open tabs straight away.
 
 ## Develop
@@ -97,7 +97,7 @@ Load `dist/` with **Load unpacked**, as in [Install](#install).
 
 To use a local PostHog, open the popup, choose **Self-hosted / local**, and enter something like `http://localhost:8010`. Chrome asks for permission to reach that host.
 
-**Design preview.** Every sidebar state and the popup render with mock data, no extension or sign-in needed:
+**Design preview.** Every tile state and the popup render with mock data, no extension or sign-in needed:
 
 ```bash
 pnpm preview && open "preview/out/index.html?theme=dark"   # or ?theme=light, ?popup=signedIn, ?popup=signedOut, ?popup=firefoxNeedsClient
@@ -106,7 +106,7 @@ pnpm screenshots                                          # PNGs of all of them 
 
 See [AGENTS.md](AGENTS.md) for how to work in this repo.
 
-**Icons** come from the brand logomark: run `node scripts/icons.mjs` (needs `rsvg-convert`).
+**Icons** are the paintbrush in `src/assets/logo/paintbrush.png` on a white rounded square: run `node scripts/icons.mjs` after changing it (needs ImageMagick 7, `magick`).
 
 ## Release
 
@@ -128,16 +128,18 @@ The [release workflow](.github/workflows/release.yml) checks that the tag matche
 | `src/background/session.ts`       | Account state (the only place it's cleared) and the authenticated `api()` |
 | `src/background/repoIndex.ts`     | Builds the tracked-repo index across projects                            |
 | `src/background/visualReview.ts`  | Runs for a PR in a tracked repo                                          |
-| `src/content/index.ts`            | Loader: URL + index check, placement in GitHub's PR sidebar              |
-| `src/content/mount.tsx`, `App.tsx`, `Sidebar.tsx` | The sidebar section, rendered in a shadow root           |
+| `src/content/index.ts`            | Loader: URL + index check, placement in GitHub's merge box               |
+| `src/content/mount.tsx`, `App.tsx`, `StatusTile.tsx` | The merge box tile and its panel, rendered in a shadow root |
+| `src/content/mergebox.css`        | The tile's page-level styles that depend on GitHub's markup              |
 | `src/popup/`                      | Popup UI                                                                 |
 | `src/shared/browser.ts`          | Shared access to native Firefox `browser` APIs and Chrome `chrome` APIs   |
 | `src/shared/runState.ts`          | Run → state rules, mirroring `REVIEW_STATE_FILTERS` in the backend       |
 | `src/shared/runCopy.ts`           | Label, tone, and hoggie for each state                                   |
+| `src/shared/runSummary.ts`        | The words shown for runs: tile summary, panel headline, per-run detail   |
 
 ## Known limitations
 
-- **GitHub DOM.** The section mounts in `#partial-discussion-sidebar`, right after the Labels section (found by its `labels_updated` channel, or `.js-issue-labels`). If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` is the only place to fix.
-- **Conversation tab only.** GitHub only shows the sidebar there, so Commits, Checks, and Files changed show nothing.
+- **GitHub DOM.** The tile mounts last in the row of merge box tiles, found through their `data-testid="mini-status"`. GitHub lays that row out in three fixed columns, so `src/content/mergebox.css` makes it four, and squares off the tile's corner while one of GitHub's tiles is expanded (matched by its `MiniStatusConnected` class name). If GitHub changes that markup, `findPlacement()` in `src/content/index.ts` and `mergebox.css` are the places to fix.
+- **Open PRs, Conversation tab only.** GitHub only shows the merge box there, so merged and closed PRs, Commits, Checks, and Files changed show nothing.
 - **Reading only.** The extension doesn't approve or tolerate snapshots.
 - **Firefox sign-in.** The default hosted OAuth client registers only Chrome. Firefox developer builds need a separately registered public client as described above.

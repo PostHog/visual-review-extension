@@ -1,52 +1,49 @@
 // Runs on every github.com page, so it stays tiny: parse the URL, check the repo index in
-// storage, and only load the sidebar module (React + hoggies) for a PR in a tracked repo.
+// storage, and only load the tile module (React + hoggies) for a PR in a tracked repo.
 
 import { extensionBrowser } from '../shared/browser'
 import { parsePullRequestUrl } from '../shared/github'
 import { send } from '../shared/messages'
 import { lookupRepo, needsRefresh, repoIndexItem } from '../shared/repoIndex'
 import { onStorageChange } from '../shared/storage'
-import type { SidebarHandle } from './mount'
+import type { TileHandle } from './mount'
 
+// mergebox.css makes room for the tile by this id.
 const HOST_ID = 'posthog-visual-review'
 
 /**
- * Where the section goes: right after "Labels" in the PR's sidebar, like any other sidebar
- * section. Pages without the sidebar (Files changed, Commits, Checks) show nothing.
+ * Where the tile goes: last in the row of status tiles (Checks, Comments, Approvals) at the
+ * bottom of the PR's merge box. Pages without the merge box (Files changed, Commits, merged
+ * and closed PRs) show nothing.
  */
-function findPlacement(): { el: Element; position: InsertPosition } | null {
-    const sidebar = document.querySelector('#partial-discussion-sidebar')
-    if (!sidebar) {
-        return null
-    }
-    // GitHub re-renders the Labels section in place when labels change, keyed on this channel.
-    const labels =
-        sidebar.querySelector('[data-channel-event-name="labels_updated"]') ??
-        sidebar.querySelector('.js-issue-labels')?.closest('.discussion-sidebar-item')
-    if (labels) {
-        return { el: labels, position: 'afterend' }
-    }
-    const first = sidebar.querySelector('.discussion-sidebar-item')
-    return first ? { el: first, position: 'afterend' } : { el: sidebar, position: 'afterbegin' }
+function findPlacement(): Element | null {
+    return document.querySelector('[data-testid="mini-status"]')?.parentElement ?? null
 }
 
 let host: HTMLElement | null = null
-let sidebar: SidebarHandle | null = null
+let tile: TileHandle | null = null
 let lastHref = ''
 let syncId = 0
 
-/** Put the host in place, or back in place if GitHub re-rendered the sidebar and dropped it. */
+/**
+ * Put the host in place while there's something to show, or back in place if GitHub re-rendered
+ * the merge box and dropped it. Otherwise keep it out of GitHub's DOM entirely.
+ */
 function attach(): void {
-    if (host && !host.isConnected) {
-        const placement = findPlacement()
-        placement?.el.insertAdjacentElement(placement.position, host)
+    if (!host) {
+        return
+    }
+    if (host.hidden) {
+        host.remove()
+    } else if (!host.isConnected) {
+        findPlacement()?.append(host)
     }
 }
 
 function unmount(): void {
-    sidebar?.unmount()
+    tile?.unmount()
     host?.remove()
-    sidebar = null
+    tile = null
     host = null
 }
 
@@ -70,20 +67,23 @@ async function sync(): Promise<void> {
         return
     }
 
-    const { mountSidebar } = (await import(extensionBrowser().runtime.getURL('sidebar.js'))) as typeof import('./mount')
+    const { mountTile } = (await import(extensionBrowser().runtime.getURL('tile.js'))) as typeof import('./mount')
     if (id !== syncId) {
         return
     }
-    if (sidebar) {
-        sidebar.update(pr, entry)
+    if (tile) {
+        tile.update(pr, entry)
     } else {
-        host = document.createElement('div')
-        host.id = HOST_ID
-        // GitHub's own class, so the section gets the same spacing and divider as its neighbors.
-        // Hidden until there's something to show.
-        host.className = 'discussion-sidebar-item'
-        host.hidden = true
-        sidebar = mountSidebar(host, pr, entry)
+        const el = document.createElement('section')
+        el.id = HOST_ID
+        el.setAttribute('aria-label', 'Visual review')
+        // Hidden, and so out of the page, until there's something to show.
+        el.hidden = true
+        host = el
+        tile = mountTile(el, pr, entry, (visible) => {
+            el.hidden = !visible
+            attach()
+        })
     }
     attach()
 }
@@ -99,12 +99,12 @@ function schedule(): void {
     }
 }
 
-// GitHub navigates with Turbo and React Router and re-renders the sidebar freely. The observer
+// GitHub navigates with Turbo and React Router and re-renders the merge box freely. The observer
 // is the catch-all for both, so its per-mutation work is a string compare and a flag check.
 new MutationObserver(() => {
     if (location.href !== lastHref) {
         schedule()
-    } else if (host && !host.isConnected) {
+    } else if (host && !host.hidden && !host.isConnected) {
         attach()
     }
 }).observe(document.body, { childList: true, subtree: true })

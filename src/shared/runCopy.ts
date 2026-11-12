@@ -1,7 +1,7 @@
 import {
     HedgehogError,
     HedgehogHourglass,
-    HedgehogMagnifyingGlass,
+    HedgehogOrganized,
     HedgehogReading,
     HedgehogStampApproved,
     HedgehogSuccess,
@@ -13,9 +13,9 @@ export type Tone = 'success' | 'attention' | 'danger' | 'neutral'
 
 export type Hoggie = typeof HedgehogSuccess
 
-/** How each run state is presented, shared by the GitHub sidebar and the popup. */
+/** How each run state is presented, shared by the merge box tile and the popup. */
 export const STATE_COPY: Record<RunState, { label: string; tone: Tone; hoggie: Hoggie }> = {
-    needs_review: { label: 'Needs review', tone: 'attention', hoggie: HedgehogMagnifyingGlass },
+    needs_review: { label: 'Needs review', tone: 'attention', hoggie: HedgehogOrganized },
     failed: { label: 'Failed', tone: 'danger', hoggie: HedgehogError },
     processing: { label: 'In progress', tone: 'attention', hoggie: HedgehogHourglass },
     observe: { label: 'Tracking only', tone: 'neutral', hoggie: HedgehogReading },
