@@ -5,7 +5,7 @@ import { send } from '../shared/messages'
 import type { RepoIndexEntry } from '../shared/repoIndex'
 import { isInFlight } from '../shared/runState'
 import type { PrResults, PullRequestRef } from '../shared/types'
-import { hasContent, Sidebar } from './Sidebar'
+import { hasContent, StatusTile } from './StatusTile'
 
 const POLL_IN_FLIGHT_MS = 15_000
 const POLL_AWAITING_RUN_MS = 60_000
@@ -37,7 +37,7 @@ export function App({
     }, [load])
 
     // Keep polling while CI is still producing or diffing snapshots. A PR with no runs yet is
-    // polled slowly too: the section is hidden then, and should appear once CI uploads a run.
+    // polled slowly too: the tile is hidden then, and should appear once CI uploads a run.
     useEffect(() => {
         const interval =
             results?.kind === 'runs' && isInFlight(results.runs)
@@ -67,9 +67,9 @@ export function App({
         return () => document.removeEventListener('visibilitychange', onVisible)
     }, [load])
 
-    // The host is a sidebar item with GitHub's own padding and divider, so hide it rather than
-    // leave an empty section when there's nothing to report.
+    // The host is a tile in GitHub's merge box, so take it out rather than leave an empty
+    // tile when there's nothing to report.
     useEffect(() => onVisibleChange(hasContent(results)), [results, onVisibleChange])
 
-    return <Sidebar results={results} />
+    return <StatusTile results={results} />
 }

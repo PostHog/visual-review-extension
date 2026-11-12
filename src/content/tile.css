@@ -1,0 +1,419 @@
+/*
+ * Styled with GitHub's own Primer CSS variables (they inherit through the shadow root),
+ * so the tile matches light, dark, dimmed, and high-contrast themes automatically.
+ * Fallbacks are Primer's light-theme values.
+ *
+ * The host sits in GitHub's merge box, next to the Checks, Comments, and Approvals tiles, and
+ * copies their box: padding, muted background, a divider on its leading edge, and the box's
+ * rounded corner. Like theirs, it switches between a row (768px and up) and a stack, measured
+ * on the merge box, which is a size container. The rules that depend on GitHub's markup
+ * around the tile live in mergebox.css.
+ */
+
+:host {
+    all: initial;
+    display: block;
+    min-inline-size: 0;
+    overflow: clip;
+    font-family: var(--fontStack-sansSerif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fgColor-default, #1f2328);
+    border-inline-start: var(--borderWidth-thin, 1px) solid var(--borderColor-default, #d1d9e0);
+}
+@container (width >= 768px) {
+    :host {
+        border-end-end-radius: var(--borderRadius-medium, 6px);
+    }
+}
+@container (width < 768px) {
+    :host {
+        border-inline-start: 0;
+        border-block-start: var(--borderWidth-thin, 1px) solid var(--borderColor-default, #d1d9e0);
+        border-end-start-radius: var(--borderRadius-medium, 6px);
+        border-end-end-radius: var(--borderRadius-medium, 6px);
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* The React container (see shadow.tsx). Fills the grid cell so the tile's background does too. */
+.root {
+    block-size: 100%;
+}
+
+/* ---- The tile ---- */
+
+.tile {
+    anchor-name: --visual-review-tile;
+    position: relative;
+    block-size: 100%;
+    padding: 6px 16px 16px;
+    background: var(--bgColor-muted, #f6f8fa);
+}
+.tile.open {
+    background: var(--bgColor-default, #ffffff);
+}
+
+/* Covers the whole tile, like GitHub's, so anywhere on it opens the panel. */
+.tile-button {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 0;
+    appearance: none;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+}
+.tile-button:focus-visible {
+    outline: 2px solid var(--focus-outlineColor, #0969da);
+    outline-offset: -2px;
+}
+
+.label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-block-size: 26px;
+}
+
+.label-text {
+    flex: none;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tile-summary {
+    min-inline-size: 0;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--fgColor-muted, #59636e);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Appears on hover and focus, like the icon on GitHub's tiles. */
+.nav-icon {
+    flex: none;
+    margin-inline-start: auto;
+    color: var(--fgColor-muted, #59636e);
+    opacity: 0;
+    visibility: hidden;
+}
+.tile:hover .nav-icon,
+.tile:focus-within .nav-icon,
+.tile.open .nav-icon {
+    opacity: 1;
+    visibility: visible;
+}
+.tile.open .nav-icon {
+    transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .tile {
+        transition: background-color 100ms ease;
+    }
+    .nav-icon {
+        transition:
+            opacity 100ms ease,
+            visibility 100ms,
+            transform 100ms ease;
+    }
+}
+
+/* One segment per run type, colored by its state. Same shape as GitHub's checks bar. */
+.bar {
+    display: flex;
+    block-size: 8px;
+    margin-block-start: 2px;
+    overflow: hidden;
+    border-radius: var(--borderRadius-small, 3px);
+    background: var(--progressBar-track-bgColor, #d1d9e0);
+}
+.segment {
+    flex: 1;
+    min-inline-size: 4px;
+}
+.segment + .segment {
+    border-inline-start: 1px solid var(--fgColor-onEmphasis, #ffffff);
+}
+.bg-success {
+    background: var(--bgColor-success-emphasis, #1f883d);
+}
+.bg-attention {
+    background: var(--bgColor-attention-emphasis, #9a6700);
+}
+.bg-danger {
+    background: var(--bgColor-danger-emphasis, #cf222e);
+}
+.bg-neutral {
+    background: var(--bgColor-neutral-emphasis, #59636e);
+}
+
+/* Nothing to measure, e.g. the request failed. GitHub's striped "unavailable" bar. */
+.bar-unavailable {
+    block-size: 8px;
+    margin-block-start: 2px;
+    border: 1px solid var(--borderColor-muted, #d1d9e0b3);
+    border-radius: var(--borderRadius-full, 9999px);
+    background-color: var(--bgColor-neutral-muted, #818b981f);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0,
+        transparent 2px,
+        var(--bgColor-default, #ffffff) 2px,
+        var(--bgColor-default, #ffffff) 4px
+    );
+}
+
+/* ---- The panel: a popover under the tile, styled as a Primer overlay ---- */
+
+.panel {
+    position-anchor: --visual-review-tile;
+    position-try-fallbacks: flip-block;
+    inset: auto;
+    top: anchor(bottom);
+    right: anchor(right);
+    inline-size: 360px;
+    max-inline-size: calc(100vw - 16px);
+    margin: 4px 0 0;
+    padding: 12px 16px 16px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--fgColor-default, #1f2328);
+    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 0;
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(
+        --shadow-floating-small,
+        0 0 0 1px #d1d9e080,
+        0 6px 12px -3px #25292e0a,
+        0 6px 18px 0 #25292e1f
+    );
+}
+
+/* Matches the small muted headings in GitHub's overlays. */
+.panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fgColor-muted, #59636e);
+}
+
+.logomark {
+    width: 16px;
+    height: auto;
+    flex: none;
+    /* The mono mark, on dark themes, draws in this color. */
+    color: var(--fgColor-default, #1f2328);
+}
+
+.tone-neutral {
+    --tone-fg: var(--fgColor-muted, #59636e);
+    --tone-bg: var(--bgColor-muted, #f6f8fa);
+    --tone-border: var(--borderColor-default, #d1d9e0);
+}
+.tone-success {
+    --tone-fg: var(--fgColor-success, #1a7f37);
+    --tone-bg: var(--bgColor-success-muted, #dafbe1);
+    --tone-border: var(--borderColor-success-muted, rgba(74, 194, 107, 0.4));
+}
+.tone-attention {
+    --tone-fg: var(--fgColor-attention, #9a6700);
+    --tone-bg: var(--bgColor-attention-muted, #fff8c5);
+    --tone-border: var(--borderColor-attention-muted, rgba(212, 167, 44, 0.4));
+}
+.tone-danger {
+    --tone-fg: var(--fgColor-danger, #d1242f);
+    --tone-bg: var(--bgColor-danger-muted, #ffebe9);
+    --tone-border: var(--borderColor-danger-muted, rgba(255, 129, 130, 0.4));
+}
+
+.summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hoggie {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+}
+.hoggie svg {
+    display: block;
+}
+
+.summary-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.subtitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 6px;
+    margin-top: 2px;
+    color: var(--fgColor-muted, #59636e);
+    overflow-wrap: anywhere;
+}
+
+/* Primer Label */
+.label {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+    white-space: nowrap;
+    border: 1px solid var(--tone-border);
+    border-radius: 2em;
+    color: var(--tone-fg);
+    background: var(--tone-bg);
+}
+
+.runs {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.run-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+}
+
+.run-link {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+.run-link:hover .run-type {
+    color: var(--fgColor-accent, #0969da);
+    text-decoration: underline;
+}
+
+.run-type {
+    flex: none;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    white-space: nowrap;
+}
+
+.run-detail {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--fgColor-muted, #59636e);
+}
+
+/* Primer Button, small, full width. */
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 28px;
+    margin-top: 8px;
+    padding: 0 12px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--button-default-fgColor-rest, var(--fgColor-default, #25292e));
+    background: var(--button-default-bgColor-rest, #f6f8fa);
+    border: 1px solid var(--button-default-borderColor-rest, var(--borderColor-default, #d1d9e0));
+    border-radius: var(--borderRadius-medium, 6px);
+    box-shadow: var(--button-default-shadow-resting, 0 1px 0 0 #1f23280a);
+    transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+.btn:hover {
+    text-decoration: none;
+    background: var(--button-default-bgColor-hover, #eff2f5);
+    border-color: var(--button-default-borderColor-hover, var(--borderColor-default, #d1d9e0));
+}
+.btn:focus-visible,
+.run-link:focus-visible {
+    outline: 2px solid var(--focus-outlineColor, #0969da);
+    outline-offset: 1px;
+    border-radius: 4px;
+}
+.btn-primary {
+    color: var(--button-primary-fgColor-rest, #ffffff);
+    background: var(--button-primary-bgColor-rest, #1f883d);
+    border-color: var(--button-primary-borderColor-rest, rgba(31, 35, 40, 0.15));
+    box-shadow: var(--button-primary-shadow-selected, 0 1px 0 0 #1f232826);
+}
+.btn-primary:hover {
+    background: var(--button-primary-bgColor-hover, #1c8139);
+    border-color: var(--button-primary-borderColor-hover, rgba(31, 35, 40, 0.15));
+}
+.btn-trailing {
+    color: inherit;
+    opacity: 0.8;
+}
+
+.octicon {
+    flex: none;
+    vertical-align: text-bottom;
+}
+.fg-success {
+    color: var(--fgColor-success, #1a7f37);
+}
+.fg-danger {
+    color: var(--fgColor-danger, #d1242f);
+}
+.fg-attention {
+    color: var(--fgColor-attention, #9a6700);
+}
+.fg-neutral {
+    color: var(--fgColor-muted, #59636e);
+}
+.spin {
+    animation: spin 1.2s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .spin {
+        animation: none;
+    }
+}

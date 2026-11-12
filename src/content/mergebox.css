@@ -1,0 +1,26 @@
+/*
+ * The tile's styles that depend on GitHub's markup around it, injected into the page once.
+ * Page styles beat the tile's own :host rules, and #posthog-visual-review is the host's id
+ * (HOST_ID in index.ts). The merge box is the nearest size container, so the queries measure
+ * the box rather than the window, like GitHub's own rules.
+ *
+ * GitHub's merge box lays out its status tiles (Checks, Comments, Approvals) in three fixed
+ * columns. While the visual review tile is in there, give every tile an equal column instead,
+ * so ours shares the row. Below 768px GitHub stacks the tiles, and ours stacks with them.
+ */
+@container (width >= 768px) {
+    :has(> #posthog-visual-review) {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+    }
+}
+
+/*
+ * One of GitHub's tiles is expanded: its panel hangs off the bottom of the merge box, and
+ * GitHub squares off the box's last corner. Ours is the last tile now, so it does that instead.
+ */
+[class*='MiniStatusConnected'] ~ #posthog-visual-review {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+}

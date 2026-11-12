@@ -1,4 +1,4 @@
-// Octicons (MIT, github.com/primer/octicons), inlined so the sidebar reads as native GitHub UI.
+// Octicons (MIT, github.com/primer/octicons), inlined so the tile reads as native GitHub UI.
 
 interface IconProps {
     className?: string
@@ -33,7 +33,14 @@ export const XCircleFillIcon = (p: IconProps) => (
     />
 )
 
-export const DotFillIcon = (p: IconProps) => <Octicon {...p} d="M8 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
+export const ChevronDownIcon = (p: IconProps) => (
+    <Octicon
+        {...p}
+        d="M12.78 5.22a.749.749 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.06 0L3.22 6.28a.749.749 0 1 1 1.06-1.06L8 8.939l3.72-3.719a.749.749 0 0 1 1.06 0Z"
+    />
+)
+
+export const DotFillIcon =(p: IconProps) => <Octicon {...p} d="M8 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
 
 export const EyeIcon = (p: IconProps) => (
     <Octicon

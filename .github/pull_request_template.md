@@ -9,8 +9,8 @@
 ## Screenshots
 
 <!--
-Attach screenshots right here in the description. They're required for anything a person can see: the sidebar
-section, the popup, sign-in, or the extension's name and icon. A visible change without them isn't ready to merge.
+Attach screenshots right here in the description. They're required for anything a person can see: the merge box
+tile, the popup, sign-in, or the extension's name and icon. A visible change without them isn't ready to merge.
 
 1. Run `pnpm screenshots` on this branch and on main. The images land in preview/out/screenshots/.
 2. Attach the ones that changed, before and after, in light and dark: drag the PNGs into this editor, or run

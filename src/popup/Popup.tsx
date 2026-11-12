@@ -2,6 +2,7 @@ import { HedgehogError, HedgehogExplorer, HedgehogHourglass, HedgehogSleepy } fr
 import { Logo } from '@posthog/brand/logo'
 import { useEffect, useState } from 'react'
 
+import { BrandLogomark } from '../shared/BrandLogomark'
 import { errorMessage } from '../shared/errors'
 import { parsePullRequestUrl, repoFullName } from '../shared/github'
 import { CLOUD_AUTH_HOST, normalizeHost } from '../shared/host'
@@ -335,7 +336,7 @@ export function Popup() {
         <main className="popup">
             <header className="popup-header">
                 <span className="brand-logo" aria-label="PostHog">
-                    <Logo.Logomark className="brand-logomark" />
+                    <BrandLogomark className="brand-logomark" />
                     <Logo.Wordmark className="brand-wordmark" />
                 </span>
                 <span className="product-tag">Visual review</span>
