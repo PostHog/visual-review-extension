@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { latestRunPerType, overallState, runState, summaryText } from './runState'
+import { latestRunPerType, needsUnresolvedCount, overallState, runState, summaryText } from './runState'
 import type { RunApi } from './types'
 
 function run(overrides: Partial<RunApi> = {}): RunApi {
@@ -41,6 +41,19 @@ describe('runState', () => {
     it('treats a missing unresolved count as unresolved changes', () => {
         const { unresolved: _, ...summary } = changed
         expect(runState(run({ summary }))).toBe('needs_review')
+    })
+})
+
+describe('needsUnresolvedCount', () => {
+    it.each([
+        [true, run({ summary: changed })],
+        [false, run()],
+        [false, run({ summary: changed, approved: true })],
+        [false, run({ summary: changed, pr_number: null })],
+        [false, run({ summary: changed, status: 'processing' })],
+        [false, run({ summary: changed, status: 'failed' })],
+    ])('%s for %#', (expected, r) => {
+        expect(needsUnresolvedCount(r)).toBe(expected)
     })
 })
 

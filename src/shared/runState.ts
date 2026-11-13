@@ -35,6 +35,15 @@ export function runState(run: RunApi): RunState {
     return 'needs_review'
 }
 
+/**
+ * Whether a run's state turns on its unresolved count: a completed, unapproved PR run with changes.
+ * The runs list always reports `unresolved: 0` (only the single-run read counts it), so these
+ * runs must be read one by one.
+ */
+export function needsUnresolvedCount(run: RunApi): boolean {
+    return run.status === 'completed' && !run.approved && run.pr_number != null && changeCount(run) > 0
+}
+
 const PRIORITY: RunState[] = ['failed', 'needs_review', 'processing', 'observe', 'approved', 'clean']
 
 /** The state that best describes a set of runs: the most urgent one wins. */
